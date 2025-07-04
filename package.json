@@ -2,12 +2,12 @@
   "name": "worklog-ai",
   "displayName": "Worklog Generator for timesheet",
   "description": "Generate worklogs based on code changes or selected commits",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "icon": "images/icon.png",
   "publisher": "DevendraParihar",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Devparihar5/DevLog-AI-Assistant.git"
+    "url": "https://github.com/Devparihar5/worklog-ai.git"
   },
   "author": {
     "name": "Rahul Sharma & Devendra Parihar"
@@ -36,33 +36,63 @@
   "contributes": {
     "commands": [
       {
-        "command": "vscode-worklog.generateWorklog",
-        "title": "Generate Worklog"
+        "command": "worklog-ai.generateWorklog",
+        "title": "✨ Generate New Worklog",
+        "category": "Worklog AI"
       },
       {
-        "command": "vscode-worklog.generateWorklogFromCurrentChanges",
-        "title": "Generate from Current Changes",
-        "icon": "$(diff)"
+        "command": "worklog-ai.generateWorklogFromCurrentChanges",
+        "title": "✨ Create Worklog from Uncommitted Changes",
+        "category": "Worklog AI",
+        "icon": {
+          "light": "$(diff)",
+          "dark": "$(diff)"
+        }
       },
       {
-        "command": "vscode-worklog.generateWorklogFromCommit",
-        "title": "Generate from Selected Commit",
-        "icon": "$(git-commit)"
+        "command": "worklog-ai.generateWorklogFromCommit",
+        "title": "📝 Create Worklog from Commit History",
+        "category": "Worklog AI",
+        "icon": {
+          "light": "$(git-commit)",
+          "dark": "$(git-commit)"
+        }
       },
       {
-        "command": "vscode-worklog.exportWorklog",
-        "title": "Export Worklog",
-        "icon": "$(export)"
+        "command": "worklog-ai.exportWorklog",
+        "title": "📤 Save Worklog to File",
+        "category": "Worklog AI",
+        "icon": {
+          "light": "$(export)",
+          "dark": "$(export)"
+        }
       },
       {
-        "command": "vscode-worklog.refreshView",
-        "title": "Refresh",
-        "icon": "$(refresh)"
+        "command": "worklog-ai.refreshView",
+        "title": "🔄 Refresh Worklog Panel",
+        "category": "Worklog AI",
+        "icon": {
+          "light": "$(refresh)",
+          "dark": "$(refresh)"
+        }
       },
       {
-        "command": "vscode-worklog.copyWorklog",
-        "title": "Copy Worklog to Clipboard",
-        "icon": "$(copy)"
+        "command": "worklog-ai.copyWorklog",
+        "title": "📋 Copy Worklog to Clipboard",
+        "category": "Worklog AI",
+        "icon": {
+          "light": "$(copy)",
+          "dark": "$(copy)"
+        }
+      },
+      {
+        "command": "worklog-ai.openSettings",
+        "title": "⚙️ Configure Worklog Settings",
+        "category": "Worklog AI",
+        "icon": {
+          "light": "$(gear)",
+          "dark": "$(gear)"
+        }
       }
     ],
     "viewsContainers": {
@@ -70,7 +100,7 @@
         {
           "id": "worklog-ai",
           "title": "Worklog AI",
-          "icon": "$(notebook)"
+          "icon": "$(notebook-template)"
         }
       ]
     },
@@ -85,26 +115,55 @@
     "menus": {
       "view/title": [
         {
-          "command": "vscode-worklog.refreshView",
+          "command": "worklog-ai.generateWorklogFromCurrentChanges",
           "when": "view == worklogGeneratorView",
-          "group": "navigation"
+          "group": "navigation@1"
+        },
+        {
+          "command": "worklog-ai.generateWorklogFromCommit",
+          "when": "view == worklogGeneratorView",
+          "group": "navigation@2"
+        },
+        {
+          "command": "worklog-ai.refreshView",
+          "when": "view == worklogGeneratorView",
+          "group": "navigation@3"
+        },
+        {
+          "command": "worklog-ai.openSettings",
+          "when": "view == worklogGeneratorView",
+          "group": "navigation@4"
         }
       ],
       "view/item/context": [
         {
-          "command": "vscode-worklog.exportWorklog",
+          "command": "worklog-ai.exportWorklog",
           "when": "view == worklogGeneratorView && viewItem == worklogResult",
-          "group": "inline"
+          "group": "inline@1"
         },
         {
-          "command": "vscode-worklog.copyWorklog",
+          "command": "worklog-ai.copyWorklog",
           "when": "view == worklogGeneratorView && viewItem == worklogResult",
-          "group": "inline"
+          "group": "inline@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "worklog-ai.generateWorklog",
+          "group": "Worklog AI"
+        },
+        {
+          "command": "worklog-ai.generateWorklogFromCurrentChanges",
+          "group": "Worklog AI"
+        },
+        {
+          "command": "worklog-ai.generateWorklogFromCommit",
+          "group": "Worklog AI"
         }
       ],
       "scm/title": [
         {
-          "command": "vscode-worklog.generateWorklogFromCurrentChanges",
+          "command": "worklog-ai.generateWorklogFromCurrentChanges",
           "group": "navigation",
           "when": "scmProvider == git"
         }

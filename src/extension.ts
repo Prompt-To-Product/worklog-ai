@@ -172,6 +172,9 @@ export function activate(context: vscode.ExtensionContext) {
         await vscode.env.clipboard.writeText(worklog);
         vscode.window.showInformationMessage('Worklog copied to clipboard!');
       }
+    }),
+    vscode.commands.registerCommand('vscode-worklog.openSettings', () => {
+      vscode.commands.executeCommand('workbench.action.openSettings', 'worklogGenerator');
     })
   );
 }
