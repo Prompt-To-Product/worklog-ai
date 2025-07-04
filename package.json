@@ -1,12 +1,12 @@
 {
-  "name": "vscode-worklog",
-  "displayName": "VS Code Worklog Generator",
+  "name": "worklog-ai",
+  "displayName": "Worklog Generator for timesheet",
   "description": "Generate worklogs based on code changes or selected commits",
-  "version": "0.1.0",
-  "publisher": "vscode-worklog",
+  "version": "0.1.1",
+  "publisher": "DevendraParihar",
   "repository": {
     "type": "git",
-    "url": "https://github.com/username/vscode-worklog.git"
+    "url": "https://github.com/Devparihar5/DevLog-AI-Assistant.git"
   },
   "license": "MIT",
   "engines": {
