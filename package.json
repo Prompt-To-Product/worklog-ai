@@ -1,0 +1,170 @@
+{
+  "name": "vscode-worklog",
+  "displayName": "VS Code Worklog Generator",
+  "description": "Generate worklogs based on code changes or selected commits",
+  "version": "0.1.0",
+  "publisher": "vscode-worklog",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username/vscode-worklog.git"
+  },
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:worklogGeneratorView"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-worklog.generateWorklog",
+        "title": "Generate Worklog"
+      },
+      {
+        "command": "vscode-worklog.generateWorklogFromCurrentChanges",
+        "title": "Generate from Current Changes",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "vscode-worklog.generateWorklogFromCommit",
+        "title": "Generate from Selected Commit",
+        "icon": "$(git-commit)"
+      },
+      {
+        "command": "vscode-worklog.exportWorklog",
+        "title": "Export Worklog",
+        "icon": "$(export)"
+      },
+      {
+        "command": "vscode-worklog.refreshView",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "vscode-worklog.copyWorklog",
+        "title": "Copy Worklog to Clipboard",
+        "icon": "$(copy)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "worklog-ai",
+          "title": "Worklog AI",
+          "icon": "$(notebook)"
+        }
+      ]
+    },
+    "views": {
+      "worklog-ai": [
+        {
+          "id": "worklogGeneratorView",
+          "name": "Worklog Generator"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "vscode-worklog.refreshView",
+          "when": "view == worklogGeneratorView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "vscode-worklog.exportWorklog",
+          "when": "view == worklogGeneratorView && viewItem == worklogResult",
+          "group": "inline"
+        },
+        {
+          "command": "vscode-worklog.copyWorklog",
+          "when": "view == worklogGeneratorView && viewItem == worklogResult",
+          "group": "inline"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "vscode-worklog.generateWorklogFromCurrentChanges",
+          "group": "navigation",
+          "when": "scmProvider == git"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Worklog Generator",
+      "properties": {
+        "worklogGenerator.geminiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API Key for Gemini"
+        },
+        "worklogGenerator.openaiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API Key for OpenAI"
+        },
+        "worklogGenerator.defaultLlmProvider": {
+          "type": "string",
+          "enum": [
+            "gemini",
+            "openai"
+          ],
+          "default": "gemini",
+          "description": "Default LLM provider to use for worklog generation"
+        },
+        "worklogGenerator.defaultWorklogStyle": {
+          "type": "string",
+          "enum": [
+            "technical",
+            "business",
+            "dsu"
+          ],
+          "default": "dsu",
+          "description": "Default style for worklog generation"
+        },
+        "worklogGenerator.autoGenerateOnCommit": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically generate worklog when committing changes"
+        },
+        "worklogGenerator.includeWorklogInCommitMessage": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include generated worklog in commit message"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^7.1.3",
+    "@types/marked": "^5.0.2",
+    "@types/mocha": "^8.2.2",
+    "@types/node": "14.x",
+    "@types/vscode": "^1.60.0",
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
+    "eslint": "^7.27.0",
+    "glob": "^7.1.7",
+    "mocha": "^8.4.0",
+    "typescript": "^4.3.2",
+    "vscode-test": "^1.5.2"
+  },
+  "dependencies": {
+    "axios": "^0.21.1",
+    "marked": "^4.0.10"
+  }
+}
