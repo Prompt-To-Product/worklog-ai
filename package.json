@@ -2,12 +2,26 @@
   "name": "worklog-ai",
   "displayName": "Worklog Generator for timesheet",
   "description": "Generate worklogs based on code changes or selected commits",
-  "version": "0.1.1",
+  "version": "0.1.4",
+  "icon": "images/icon.png",
   "publisher": "DevendraParihar",
   "repository": {
     "type": "git",
     "url": "https://github.com/Devparihar5/DevLog-AI-Assistant.git"
   },
+  "author": {
+    "name": "Rahul Sharma & Devendra Parihar"
+  },
+  "contributors": [
+    {
+      "name": "Rahul Sharma",
+      "url": "https://github.com/rahul-0210/"
+    },
+    {
+      "name": "Devendra Parihar",
+      "url": "https://github.com/Devparihar5"
+    }
+  ],
   "license": "MIT",
   "engines": {
     "vscode": "^1.60.0"
