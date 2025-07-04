@@ -4,15 +4,15 @@ Generate professional worklogs instantly from your code changes using AI.
 
 ## Features
 
-• **Generate worklogs instantly** from either your uncommitted changes or any specific commit you select
-• **Choose your preferred AI provider** between OpenAI or Google Gemini (requires your own API key)
-• **Select your ideal worklog style** from three options:
-  • **Technical Style**: Focused on implementation details
-  • **Business Style**: Emphasizes business impact with minimal technical jargon
-  • **Daily Stand-up (DSU) Style**: Structured for stand-up meetings with Completed/In Progress/Blockers format
-• **Access worklogs directly in VS Code** through the dedicated Worklog AI panel
-• **Copy or export worklogs** for sharing with stakeholders
-• **Configure automatic worklog generation** when committing changes
+- **Generate worklogs instantly** from either your uncommitted changes or any specific commit you select
+- **Choose your preferred AI provider** between OpenAI or Google Gemini (requires your own API key)
+- **Select your ideal worklog style** from three options:
+    - **Technical Style**: Focused on implementation details
+    - **Business Style**: Emphasizes business impact with minimal technical jargon
+- **Daily Stand-up (DSU) Style**: Structured for stand-up meetings with Completed/In Progress/Blockers format
+- **Access worklogs directly in VS Code** through the dedicated Worklog AI panel
+- **Copy or export worklogs** for sharing with stakeholders
+- **Configure automatic worklog generation** when committing changes
 
 ## Installation
 
