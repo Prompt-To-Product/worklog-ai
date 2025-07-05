@@ -1,8 +1,8 @@
 # Worklog AI for VS Code
 
-[![](https://vsmarketplacebadges.dev/version-short/DevendraParihar.worklog-ai.svg)](https://marketplace.visualstudio.com/items?itemName=DevendraParihar.worklog-ai)
-[![](https://vsmarketplacebadges.dev/downloads-short/DevendraParihar.worklog-ai.svg)](https://marketplace.visualstudio.com/items?itemName=DevendraParihar.worklog-ai)
-[![](https://vsmarketplacebadges.dev/rating-short/DevendraParihar.worklog-ai.svg)](https://marketplace.visualstudio.com/items?itemName=DevendraParihar.worklog-ai)
+[![](https://vsmarketplacebadges.dev/version-short/DevendraParihar.worklog-ai.png)](https://marketplace.visualstudio.com/items?itemName=DevendraParihar.worklog-ai)
+[![](https://vsmarketplacebadges.dev/downloads-short/DevendraParihar.worklog-ai.png)](https://marketplace.visualstudio.com/items?itemName=DevendraParihar.worklog-ai)
+[![](https://vsmarketplacebadges.dev/rating-short/DevendraParihar.worklog-ai.png)](https://marketplace.visualstudio.com/items?itemName=DevendraParihar.worklog-ai)
 
 Generate professional worklogs instantly from your code changes using AI.
 
