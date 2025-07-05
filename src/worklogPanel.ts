@@ -110,10 +110,16 @@ export class WorklogPanel {
         const worklogSection = sections[0];
         const dsuSection = sections[1];
         
+        // Clean up the worklog section - remove any "WORKLOG BULLETS:" or "**WORKLOG BULLETS:**" text
+        const cleanWorklogSection = worklogSection
+          .replace(/\*\*WORKLOG BULLETS:\*\*/g, '')
+          .replace(/WORKLOG BULLETS:/g, '')
+          .trim();
+        
         return `
           <div class="worklog-section">
             <h2>📋 Worklog Bullets</h2>
-            ${worklogSection}
+            ${cleanWorklogSection}
           </div>
           <div class="dsu-section">
             <h2>🗣️ Daily Stand-up Script</h2>

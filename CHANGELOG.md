@@ -5,6 +5,29 @@ All notable changes to the "Worklog AI" extension will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2025-07-05
+
+### Added
+- Daily Stand-up (DSU) script generation alongside worklog bullets
+- Branch selection feature for viewing commits by branch
+- User-specific commit filtering based on git user email
+- Auto-open feature for worklog panel after generation
+- Copy DSU script button for quick sharing in meetings
+
+### Changed
+- Improved UI organization with collapsible sections
+- Enhanced button styling with better visual hierarchy
+- Updated worklog generation prompts for better output quality
+- Reorganized settings section for easier configuration
+- Changed default worklog style to Business
+
+### Fixed
+- Fixed collapsible sections not expanding on click
+- Fixed loading indicator not stopping after worklog generation
+- Removed "WORKLOG BULLETS:" formatting artifacts from output
+- Fixed branch and commit selection UI issues
+- Improved error handling for empty commits
+
 ## [0.1.5] - 2025-07-04
 
 ### Added

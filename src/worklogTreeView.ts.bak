@@ -1,12 +1,6 @@
 import * as vscode from "vscode";
 import { generateWorklog } from "./worklogGenerator";
-import {
-  getGitChanges,
-  getSelectedCommit,
-  getUserCommits,
-  getBranches,
-  getCurrentBranch,
-} from "./gitUtils";
+import { getGitChanges, getSelectedCommit, getUserCommits, getBranches, getCurrentBranch } from "./gitUtils";
 import { WorklogPanel } from "./worklogPanel";
 
 export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogItem> {
@@ -260,7 +254,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
     const commitsToShow = this.userCommits.slice(0, 10);
     for (const commit of commitsToShow) {
       const commitItem = new WorklogItem(
-        commit.message.split("\n")[0].substring(0, 50) + (commit.message.length > 50 ? "..." : ""),
+        commit.message.split('\n')[0].substring(0, 50) + (commit.message.length > 50 ? '...' : ''),
         vscode.TreeItemCollapsibleState.None,
         {
           command: "vscode-worklog.generateWorklogFromSpecificCommit",
@@ -355,24 +349,24 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
   async selectLlmProvider(): Promise<void> {
     const selected = await vscode.window.showQuickPick(
       [
-        {
-          label: "🔮 Google Gemini",
-          value: "gemini",
+        { 
+          label: "🔮 Google Gemini", 
+          value: "gemini", 
           description: "Fast and efficient - Uses gemini-2.0-flash model",
-          detail: "Recommended for most users",
+          detail: "Recommended for most users"
         },
-        {
-          label: "🧠 OpenAI",
-          value: "openai",
+        { 
+          label: "🧠 OpenAI", 
+          value: "openai", 
           description: "Advanced reasoning - Uses gpt-4o model",
-          detail: "Great for complex code analysis",
+          detail: "Great for complex code analysis"
         },
       ],
       {
         placeHolder: "Choose your AI provider",
         title: "🤖 Select AI Provider for Worklog Generation",
         matchOnDescription: true,
-        matchOnDetail: true,
+        matchOnDetail: true
       }
     );
 
@@ -393,18 +387,20 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
           label: "🔧 Technical Style",
           value: "technical",
           description: "Detailed implementation with file names and functions",
+          detail: "Includes file names, function names, field names, and technical specifics"
         },
         {
           label: "💼 Business Style",
           value: "business",
           description: "Human-readable description of changes",
+          detail: "Uses action words like created, updated, implemented, integrated, optimized"
         },
       ],
       {
         placeHolder: "Choose your worklog style",
         title: "📝 Select Worklog Style",
         matchOnDescription: true,
-        matchOnDetail: true,
+        matchOnDetail: true
       }
     );
 
@@ -427,17 +423,17 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       }
 
       const selected = await vscode.window.showQuickPick(
-        branches.map((branch) => ({
+        branches.map(branch => ({
           label: branch.name,
           description: branch.current ? "Current branch" : "",
           detail: `Last commit: ${branch.lastCommit}`,
-          value: branch.name,
+          value: branch.name
         })),
         {
           placeHolder: "Select a branch to view commits",
           title: "🌿 Select Branch",
           matchOnDescription: true,
-          matchOnDetail: true,
+          matchOnDetail: true
         }
       );
 
@@ -448,9 +444,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         vscode.window.showInformationMessage(`✅ Switched to branch: ${selected.label}`);
       }
     } catch (error) {
-      vscode.window.showErrorMessage(
-        `❌ Failed to load branches: ${error instanceof Error ? error.message : String(error)}`
-      );
+      vscode.window.showErrorMessage(`❌ Failed to load branches: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -473,13 +467,11 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         async (progress) => {
           try {
             progress.report({ increment: 0, message: "Analyzing commit changes..." });
-
+            
             const changes = await getSelectedCommit(commitHash);
 
             if (!changes || changes.trim() === "") {
               vscode.window.showInformationMessage("📝 No changes found in the selected commit.");
-              this.isGenerating = false;
-              this.refresh();
               return;
             }
 
@@ -499,10 +491,6 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
             // Auto-open the worklog panel
             WorklogPanel.createOrShow(this.context.extensionUri, this.generatedWorklog);
 
-            // Stop the loader before showing the success message
-            this.isGenerating = false;
-            this.refresh();
-
             progress.report({ increment: 100, message: "Complete!" });
 
             // Show success message with action buttons
@@ -518,23 +506,21 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
             } else if (action === "💾 Save to File") {
               vscode.commands.executeCommand("vscode-worklog.exportWorklog", this.generatedWorklog);
             }
+
           } catch (error) {
-            this.isGenerating = false;
-            this.refresh();
             vscode.window.showErrorMessage(
-              `❌ Error generating worklog: ${
-                error instanceof Error ? error.message : String(error)
-              }`
+              `❌ Error generating worklog: ${error instanceof Error ? error.message : String(error)}`
             );
           }
         }
       );
     } catch (error) {
-      this.isGenerating = false;
-      this.refresh();
       vscode.window.showErrorMessage(
         `❌ Error: ${error instanceof Error ? error.message : String(error)}`
       );
+    } finally {
+      this.isGenerating = false;
+      this.refresh();
     }
   }
 
@@ -545,18 +531,17 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
     }
 
     const selected = await vscode.window.showQuickPick(
-      this.userCommits.map((commit) => ({
-        label: commit.message.split("\n")[0],
+      this.userCommits.map(commit => ({
+        label: commit.message.split('\n')[0],
         description: `${commit.date} • ${commit.hash.substring(0, 7)}`,
-        detail:
-          commit.message.length > 100 ? commit.message.substring(0, 100) + "..." : commit.message,
-        value: commit.hash,
+        detail: commit.message.length > 100 ? commit.message.substring(0, 100) + '...' : commit.message,
+        value: commit.hash
       })),
       {
         placeHolder: "Select a commit to generate worklog",
         title: `📚 All Your Commits on ${this.selectedBranch}`,
         matchOnDescription: true,
-        matchOnDetail: true,
+        matchOnDetail: true
       }
     );
 
@@ -575,17 +560,17 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       }
 
       const selectedBranch = await vscode.window.showQuickPick(
-        branches.map((branch) => ({
-          label: `${branch.current ? "⭐ " : ""}${branch.name}`,
+        branches.map(branch => ({
+          label: `${branch.current ? '⭐ ' : ''}${branch.name}`,
           description: branch.current ? "Current branch" : "",
           detail: `Last commit: ${branch.lastCommit}`,
-          value: branch.name,
+          value: branch.name
         })),
         {
           placeHolder: "Select a branch to view commits",
           title: "🌿 Select Branch for Commit Generation",
           matchOnDescription: true,
-          matchOnDetail: true,
+          matchOnDetail: true
         }
       );
 
@@ -595,28 +580,25 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
 
       // Get user commits for the selected branch
       const commits = await getUserCommits(selectedBranch.value);
-
+      
       if (commits.length === 0) {
-        vscode.window.showInformationMessage(
-          `No commits found by you on branch '${selectedBranch.value}'.`
-        );
+        vscode.window.showInformationMessage(`No commits found by you on branch '${selectedBranch.value}'.`);
         return;
       }
 
       // Let user select a commit
       const selectedCommit = await vscode.window.showQuickPick(
-        commits.map((commit) => ({
-          label: commit.message.split("\n")[0],
+        commits.map(commit => ({
+          label: commit.message.split('\n')[0],
           description: `${commit.date} • ${commit.hash.substring(0, 7)}`,
-          detail:
-            commit.message.length > 100 ? commit.message.substring(0, 100) + "..." : commit.message,
-          value: commit.hash,
+          detail: commit.message.length > 100 ? commit.message.substring(0, 100) + '...' : commit.message,
+          value: commit.hash
         })),
         {
           placeHolder: "Select a commit to generate worklog",
           title: `📚 Your Commits on ${selectedBranch.value}`,
           matchOnDescription: true,
-          matchOnDetail: true,
+          matchOnDetail: true
         }
       );
 
@@ -624,11 +606,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         await this.generateFromSpecificCommit(selectedCommit.value);
       }
     } catch (error) {
-      vscode.window.showErrorMessage(
-        `❌ Failed to show commit selector: ${
-          error instanceof Error ? error.message : String(error)
-        }`
-      );
+      vscode.window.showErrorMessage(`❌ Failed to show commit selector: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -651,7 +629,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         async (progress) => {
           try {
             progress.report({ increment: 0, message: "Analyzing git changes..." });
-
+            
             const changes = await getGitChanges();
 
             if (!changes || changes.trim() === "") {
@@ -677,10 +655,6 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
             // Auto-open the worklog panel
             WorklogPanel.createOrShow(this.context.extensionUri, this.generatedWorklog);
 
-            // Stop the loader before showing the success message
-            this.isGenerating = false;
-            this.refresh();
-
             progress.report({ increment: 100, message: "Complete!" });
 
             // Show success message with action buttons
@@ -696,23 +670,21 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
             } else if (action === "💾 Save to File") {
               vscode.commands.executeCommand("vscode-worklog.exportWorklog", this.generatedWorklog);
             }
+
           } catch (error) {
-            this.isGenerating = false;
-            this.refresh();
             vscode.window.showErrorMessage(
-              `❌ Error generating worklog: ${
-                error instanceof Error ? error.message : String(error)
-              }`
+              `❌ Error generating worklog: ${error instanceof Error ? error.message : String(error)}`
             );
           }
         }
       );
     } catch (error) {
-      this.isGenerating = false;
-      this.refresh();
       vscode.window.showErrorMessage(
         `❌ Error: ${error instanceof Error ? error.message : String(error)}`
       );
+    } finally {
+      this.isGenerating = false;
+      this.refresh();
     }
   }
 
@@ -735,13 +707,11 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         async (progress) => {
           try {
             progress.report({ increment: 0, message: "Selecting commit..." });
-
+            
             const changes = await getSelectedCommit();
 
             if (!changes || changes.trim() === "") {
               vscode.window.showInformationMessage("📝 No changes found in the selected commit.");
-              this.isGenerating = false;
-              this.refresh();
               return;
             }
 
@@ -761,10 +731,6 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
             // Auto-open the worklog panel
             WorklogPanel.createOrShow(this.context.extensionUri, this.generatedWorklog);
 
-            // Stop the loader before showing the success message
-            this.isGenerating = false;
-            this.refresh();
-
             progress.report({ increment: 100, message: "Complete!" });
 
             // Show success message with action buttons
@@ -780,23 +746,21 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
             } else if (action === "💾 Save to File") {
               vscode.commands.executeCommand("vscode-worklog.exportWorklog", this.generatedWorklog);
             }
+
           } catch (error) {
-            this.isGenerating = false;
-            this.refresh();
             vscode.window.showErrorMessage(
-              `❌ Error generating worklog: ${
-                error instanceof Error ? error.message : String(error)
-              }`
+              `❌ Error generating worklog: ${error instanceof Error ? error.message : String(error)}`
             );
           }
         }
       );
     } catch (error) {
-      this.isGenerating = false;
-      this.refresh();
       vscode.window.showErrorMessage(
         `❌ Error: ${error instanceof Error ? error.message : String(error)}`
       );
+    } finally {
+      this.isGenerating = false;
+      this.refresh();
     }
   }
 }
