@@ -195,10 +195,13 @@
           "type": "string",
           "enum": [
             "technical",
-            "business",
-            "dsu"
+            "business"
           ],
-          "default": "dsu",
+          "enumDescriptions": [
+            "Technical Style - Detailed implementation with file names, functions, and technical specifics",
+            "Business Style - Human-readable description of changes using action words like created, updated, implemented"
+          ],
+          "default": "business",
           "description": "Default style for worklog generation"
         },
         "worklogGenerator.autoGenerateOnCommit": {

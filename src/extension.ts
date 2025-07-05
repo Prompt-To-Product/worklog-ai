@@ -1,35 +1,41 @@
-import * as vscode from 'vscode';
-import * as fs from 'fs';
-import { generateWorklog } from './worklogGenerator';
-import { getGitChanges, getSelectedCommit } from './gitUtils';
-import { WorklogTreeDataProvider } from './worklogTreeView';
-import { WorklogPanel } from './worklogPanel';
-import { registerGitIntegration } from './gitIntegration';
+import * as vscode from "vscode";
+import * as fs from "fs";
+import { generateWorklog } from "./worklogGenerator";
+import { getGitChanges, getSelectedCommit } from "./gitUtils";
+import { WorklogTreeDataProvider } from "./worklogTreeView";
+import { WorklogPanel } from "./worklogPanel";
+import { registerGitIntegration } from "./gitIntegration";
 
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Worklog AI extension is now active');
+  console.log("Worklog AI extension is now active");
 
   // Register the TreeView
   const worklogTreeDataProvider = new WorklogTreeDataProvider(context);
-  vscode.window.registerTreeDataProvider('worklogGeneratorView', worklogTreeDataProvider);
+  vscode.window.registerTreeDataProvider("worklogGeneratorView", worklogTreeDataProvider);
 
   // Register Git integration
   registerGitIntegration(context);
 
   // Register commands
   context.subscriptions.push(
-    vscode.commands.registerCommand('vscode-worklog.generateWorklog', async () => {
+    vscode.commands.registerCommand("vscode-worklog.generateWorklog", async () => {
       try {
         // Get LLM provider choice
-        const defaultLlmProvider = vscode.workspace.getConfiguration('worklogGenerator').get('defaultLlmProvider', 'gemini');
+        const defaultLlmProvider = vscode.workspace
+          .getConfiguration("worklogGenerator")
+          .get("defaultLlmProvider", "gemini");
         const llmProvider = await vscode.window.showQuickPick(
           [
-            { label: 'Google Gemini (Default)', value: 'gemini', description: 'Uses gemini-2.0-flash model' },
-            { label: 'OpenAI', value: 'openai', description: 'Uses gpt-4o model' }
+            {
+              label: "Google Gemini (Default)",
+              value: "gemini",
+              description: "Uses gemini-2.0-flash model",
+            },
+            { label: "OpenAI", value: "openai", description: "Uses gpt-4o model" },
           ],
-          { 
-            placeHolder: 'Select AI Provider',
-            title: 'Choose AI Provider for Worklog Generation'
+          {
+            placeHolder: "Select AI Provider",
+            title: "Choose AI Provider for Worklog Generation",
           }
         );
 
@@ -38,28 +44,25 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         // Get worklog style choice
-        const defaultWorklogStyle = vscode.workspace.getConfiguration('worklogGenerator').get('defaultWorklogStyle', 'dsu');
+        const defaultWorklogStyle = vscode.workspace
+          .getConfiguration("worklogGenerator")
+          .get("defaultWorklogStyle", "business");
         const worklogStyle = await vscode.window.showQuickPick(
           [
-            { 
-              label: 'Technical Style', 
-              value: 'technical',
-              description: 'Focus on technical details and implementation specifics'
+            {
+              label: "Technical",
+              value: "technical",
+              description: "Focus on technical details and implementation specifics",
             },
-            { 
-              label: 'Business Style', 
-              value: 'business',
-              description: 'Focus on business impact with minimal technical jargon'
+            {
+              label: "Business",
+              value: "business",
+              description: "Focus on business impact with minimal technical jargon",
             },
-            { 
-              label: 'Daily Stand-up (DSU) Style', 
-              value: 'dsu',
-              description: 'Formatted for daily stand-ups with Completed/In Progress/Blockers'
-            }
           ],
-          { 
-            placeHolder: 'Select Worklog Style',
-            title: 'Choose Style for Worklog Generation'
+          {
+            placeHolder: "Select Worklog Style",
+            title: "Choose Style for Worklog Generation",
           }
         );
 
@@ -70,12 +73,16 @@ export function activate(context: vscode.ExtensionContext) {
         // Get source choice (current changes or specific commit)
         const sourceChoice = await vscode.window.showQuickPick(
           [
-            { label: 'Current Changes', value: 'current', description: 'Generate from uncommitted changes' },
-            { label: 'Select Commit', value: 'commit', description: 'Choose a specific commit' }
+            {
+              label: "Current Changes",
+              value: "current",
+              description: "Generate from uncommitted changes",
+            },
+            { label: "Select Commit", value: "commit", description: "Choose a specific commit" },
           ],
-          { 
-            placeHolder: 'Generate worklog from:',
-            title: 'Select Source for Worklog Generation'
+          {
+            placeHolder: "Generate worklog from:",
+            title: "Select Source for Worklog Generation",
           }
         );
 
@@ -83,79 +90,93 @@ export function activate(context: vscode.ExtensionContext) {
           return; // User cancelled
         }
 
-        let changes = '';
-        if (sourceChoice.value === 'current') {
+        let changes = "";
+        if (sourceChoice.value === "current") {
           changes = await getGitChanges();
         } else {
           changes = await getSelectedCommit();
         }
 
-        if (!changes || changes.trim() === '') {
-          vscode.window.showInformationMessage('No changes found to generate worklog.');
+        if (!changes || changes.trim() === "") {
+          vscode.window.showInformationMessage("No changes found to generate worklog.");
           return;
         }
 
         // Show progress indicator
-        vscode.window.withProgress({
-          location: vscode.ProgressLocation.Notification,
-          title: "Generating worklog...",
-          cancellable: false
-        }, async (progress) => {
-          try {
-            const worklog = await generateWorklog(
-              changes,
-              llmProvider.value,
-              worklogStyle.value
-            );
+        vscode.window.withProgress(
+          {
+            location: vscode.ProgressLocation.Notification,
+            title: "Generating worklog...",
+            cancellable: false,
+          },
+          async (progress) => {
+            try {
+              const worklog = await generateWorklog(changes, llmProvider.value, worklogStyle.value);
 
-            // Store the worklog in extension context
-            context.workspaceState.update('lastGeneratedWorklog', worklog);
-            
-            // Update the tree view
-            worklogTreeDataProvider.refresh();
+              // Store the worklog in extension context
+              context.workspaceState.update("lastGeneratedWorklog", worklog);
 
-            // Show the worklog in a webview panel
-            WorklogPanel.createOrShow(context.extensionUri, worklog);
-          } catch (error) {
-            vscode.window.showErrorMessage(`Error generating worklog: ${error instanceof Error ? error.message : String(error)}`);
+              // Update the tree view
+              worklogTreeDataProvider.refresh();
+
+              // Show the worklog in a webview panel
+              WorklogPanel.createOrShow(context.extensionUri, worklog);
+            } catch (error) {
+              vscode.window.showErrorMessage(
+                `Error generating worklog: ${
+                  error instanceof Error ? error.message : String(error)
+                }`
+              );
+            }
           }
-        });
+        );
       } catch (error) {
-        vscode.window.showErrorMessage(`Error: ${error instanceof Error ? error.message : String(error)}`);
+        vscode.window.showErrorMessage(
+          `Error: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     })
   );
 
   // Register TreeView commands
   context.subscriptions.push(
-    vscode.commands.registerCommand('vscode-worklog.selectLlmProvider', (treeView: WorklogTreeDataProvider) => {
-      treeView.selectLlmProvider();
-    }),
-    vscode.commands.registerCommand('vscode-worklog.selectWorklogStyle', (treeView: WorklogTreeDataProvider) => {
-      treeView.selectWorklogStyle();
-    }),
-    vscode.commands.registerCommand('vscode-worklog.toggleAutoGenerate', (treeView: WorklogTreeDataProvider) => {
-      treeView.toggleAutoGenerate();
-    }),
-    vscode.commands.registerCommand('vscode-worklog.generateWorklogFromCurrentChanges', (treeView: WorklogTreeDataProvider) => {
-      treeView.generateFromCurrentChanges();
-    }),
-    vscode.commands.registerCommand('vscode-worklog.generateWorklogFromCommit', (treeView: WorklogTreeDataProvider) => {
-      treeView.generateFromCommit();
-    }),
-    vscode.commands.registerCommand('vscode-worklog.viewWorklog', (worklog: string) => {
+    vscode.commands.registerCommand(
+      "vscode-worklog.selectLlmProvider",
+      (treeView: WorklogTreeDataProvider) => {
+        treeView.selectLlmProvider();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "vscode-worklog.selectWorklogStyle",
+      (treeView: WorklogTreeDataProvider) => {
+        treeView.selectWorklogStyle();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "vscode-worklog.generateWorklogFromCurrentChanges",
+      (treeView: WorklogTreeDataProvider) => {
+        treeView.generateFromCurrentChanges();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "vscode-worklog.generateWorklogFromCommit",
+      (treeView: WorklogTreeDataProvider) => {
+        treeView.generateFromCommit();
+      }
+    ),
+    vscode.commands.registerCommand("vscode-worklog.viewWorklog", (worklog: string) => {
       WorklogPanel.createOrShow(context.extensionUri, worklog);
     }),
-    vscode.commands.registerCommand('vscode-worklog.refreshView', () => {
+    vscode.commands.registerCommand("vscode-worklog.refreshView", () => {
       worklogTreeDataProvider.refresh();
     }),
-    vscode.commands.registerCommand('vscode-worklog.exportWorklog', async (worklog: string) => {
+    vscode.commands.registerCommand("vscode-worklog.exportWorklog", async (worklog: string) => {
       // Show save dialog
       const saveUri = await vscode.window.showSaveDialog({
-        defaultUri: vscode.Uri.file('worklog.md'),
+        defaultUri: vscode.Uri.file("worklog.md"),
         filters: {
-          'Markdown': ['md']
-        }
+          Markdown: ["md"],
+        },
       });
 
       if (saveUri && worklog) {
@@ -163,19 +184,45 @@ export function activate(context: vscode.ExtensionContext) {
           fs.writeFileSync(saveUri.fsPath, worklog);
           vscode.window.showInformationMessage(`Worklog exported to ${saveUri.fsPath}`);
         } catch (error) {
-          vscode.window.showErrorMessage(`Failed to export worklog: ${error instanceof Error ? error.message : String(error)}`);
+          vscode.window.showErrorMessage(
+            `Failed to export worklog: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
       }
     }),
-    vscode.commands.registerCommand('vscode-worklog.copyWorklog', async (worklog: string) => {
+    vscode.commands.registerCommand("vscode-worklog.copyWorklog", async (worklog: string) => {
       if (worklog) {
         await vscode.env.clipboard.writeText(worklog);
-        vscode.window.showInformationMessage('Worklog copied to clipboard!');
+        vscode.window.showInformationMessage("Worklog copied to clipboard!");
       }
     }),
-    vscode.commands.registerCommand('vscode-worklog.openSettings', () => {
-      vscode.commands.executeCommand('workbench.action.openSettings', 'worklogGenerator');
-    })
+    vscode.commands.registerCommand("vscode-worklog.openSettings", () => {
+      vscode.commands.executeCommand("workbench.action.openSettings", "worklogGenerator");
+    }),
+    vscode.commands.registerCommand(
+      "vscode-worklog.selectBranch",
+      (treeView: WorklogTreeDataProvider) => {
+        treeView.selectBranch();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "vscode-worklog.generateWorklogFromSpecificCommit",
+      (treeView: WorklogTreeDataProvider, commitHash: string) => {
+        treeView.generateFromSpecificCommit(commitHash);
+      }
+    ),
+    vscode.commands.registerCommand(
+      "vscode-worklog.showAllCommits",
+      (treeView: WorklogTreeDataProvider) => {
+        treeView.showAllCommits();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "vscode-worklog.showCommitSelector",
+      (treeView: WorklogTreeDataProvider) => {
+        treeView.showCommitSelector();
+      }
+    )
   );
 }
 

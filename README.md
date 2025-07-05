@@ -1,4 +1,5 @@
 # Worklog AI for VS Code
+
 [![](https://vsmarketplacebadges.dev/version-short/DevendraParihar.worklog-ai.svg)](https://marketplace.visualstudio.com/items?itemName=DevendraParihar.worklog-ai)
 [![](https://vsmarketplacebadges.dev/downloads-short/DevendraParihar.worklog-ai.svg)](https://marketplace.visualstudio.com/items?itemName=DevendraParihar.worklog-ai)
 [![](https://vsmarketplacebadges.dev/rating-short/DevendraParihar.worklog-ai.svg)](https://marketplace.visualstudio.com/items?itemName=DevendraParihar.worklog-ai)
@@ -31,22 +32,21 @@ The extension leverages advanced AI models (Google Gemini or OpenAI) to understa
 - **Multiple Worklog Styles**:
   - **Technical Style**: Detailed implementation specifics for developer handoffs
   - **Business Style**: Business impact with minimal technical jargon for stakeholder reports
-  - **Daily Stand-up (DSU) Style**: Formatted for daily stand-ups with Completed/In Progress/Blockers sections
 - **Flexible Source Options**: Generate from current uncommitted changes or select specific commits
 - **Customizable Settings**: Configure default AI provider, worklog style, and automation options
 - **Direct Integration**: Access directly from the VS Code sidebar or Source Control view
 
 ## Available Commands
 
-| Command | Description |
-|---------|-------------|
-| ✨ **Generate New Worklog** | Open the worklog generation wizard |
+| Command                                        | Description                                             |
+| ---------------------------------------------- | ------------------------------------------------------- |
+| ✨ **Generate New Worklog**                    | Open the worklog generation wizard                      |
 | ✨ **Create Worklog from Uncommitted Changes** | Generate a worklog based on current uncommitted changes |
-| 📝 **Create Worklog from Commit History** | Select a specific commit to generate a worklog |
-| 📤 **Save Worklog to File** | Export the generated worklog to a file |
-| 📋 **Copy Worklog to Clipboard** | Copy the generated worklog to clipboard |
-| 🔄 **Refresh Worklog Panel** | Refresh the worklog panel |
-| ⚙️ **Configure Worklog Settings** | Open the extension settings |
+| 📝 **Create Worklog from Commit History**      | Select a specific commit to generate a worklog          |
+| 📤 **Save Worklog to File**                    | Export the generated worklog to a file                  |
+| 📋 **Copy Worklog to Clipboard**               | Copy the generated worklog to clipboard                 |
+| 🔄 **Refresh Worklog Panel**                   | Refresh the worklog panel                               |
+| ⚙️ **Configure Worklog Settings**              | Open the extension settings                             |
 
 ## Getting Started
 
