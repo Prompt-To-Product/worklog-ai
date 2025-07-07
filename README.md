@@ -18,7 +18,7 @@ Generate professional worklogs instantly from your code changes using AI.
 
 Watch our demo video to see Worklog AI in action:
 
-![Demo Video](https://github.com/Devparihar5/worklog-ai/blob/main/media/demo-video.gif)
+![](media/worklog-ai-demo.gif)
 
 ## About Worklog AI
 
