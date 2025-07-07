@@ -102,7 +102,7 @@ export class WorklogPanel {
 
   private formatWorklogContent(htmlContent: string): string {
     // Check if the content contains DSU script section
-    if (htmlContent.includes('DSU SCRIPT') || htmlContent.includes('Yesterday I worked on')) {
+    if (htmlContent.includes('DSU SCRIPT') || htmlContent.includes('I worked on')) {
       // Split content into worklog and DSU sections
       const sections = htmlContent.split(/DSU SCRIPT|SCRIPT:/i);
       

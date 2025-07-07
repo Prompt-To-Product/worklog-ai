@@ -78,7 +78,7 @@ Example Technical Worklog:
 - Fixed null pointer exception in \`getUserById()\` method
 
 Example DSU Script:
-"Yesterday I worked on improving the payment processing system. I added a new price calculation function, updated user validation logic, and refactored the order processing to be more reliable. I also created better error handling and fixed some database connection issues."
+"I worked on improving the payment processing system. I added a new price calculation function, updated user validation logic, and refactored the order processing to be more reliable. I also created better error handling and fixed some database connection issues."
 `;
       break;
 
@@ -105,7 +105,7 @@ Example Business Worklog:
 - Fixed user lookup issues that were causing login problems
 
 Example DSU Script:
-"Yesterday I worked on enhancing our payment system. I created an automated pricing feature, improved user data validation, and made the order processing more reliable. I also implemented better error handling to improve the user experience and fixed some login issues that customers were experiencing."
+"I worked on enhancing our payment system. I created an automated pricing feature, improved user data validation, and made the order processing more reliable. I also implemented better error handling to improve the user experience and fixed some login issues that customers were experiencing."
 `;
       break;
   }
@@ -131,7 +131,7 @@ Generate exactly two sections:
 - Start each bullet with a dash (-)
 
 2. **DSU SCRIPT:**
-- Write a 2-3 sentence script that starts with "Yesterday I worked on..."
+- Write a 2-3 sentence script that starts with "I worked on..."
 - Make it conversational and suitable for reading in a daily stand-up call
 - Summarize the key accomplishments in natural language
 - Keep it under 100 words
