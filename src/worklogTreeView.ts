@@ -154,7 +154,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         arguments: [this],
       },
       "llmProvider",
-      this.llmProvider === "gemini" ? "Google Gemini" : "OpenAI"
+      this.getLlmProviderLabel()
     );
     llmProviderItem.iconPath = new vscode.ThemeIcon("symbol-enum");
     items.push(llmProviderItem);
@@ -173,6 +173,81 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
     );
     worklogStyleItem.iconPath = new vscode.ThemeIcon("symbol-enum");
     items.push(worklogStyleItem);
+
+    // Show provider-specific settings based on selected provider
+    if (this.llmProvider === "gemini") {
+      const geminiApiKey = vscode.workspace
+        .getConfiguration("worklogGenerator")
+        .get("geminiApiKey", "");
+        
+      const apiKeyItem = new WorklogItem(
+        "🔑 Gemini API Key",
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: "vscode-worklog.configureGeminiApiKey",
+          title: "Configure Gemini API Key",
+          arguments: [this],
+        },
+        "geminiApiKey",
+        geminiApiKey ? "••••••••" : "Not configured"
+      );
+      apiKeyItem.iconPath = new vscode.ThemeIcon("key");
+      items.push(apiKeyItem);
+    } else if (this.llmProvider === "openai") {
+      const openaiApiKey = vscode.workspace
+        .getConfiguration("worklogGenerator")
+        .get("openaiApiKey", "");
+        
+      const apiKeyItem = new WorklogItem(
+        "🔑 OpenAI API Key",
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: "vscode-worklog.configureOpenAiApiKey",
+          title: "Configure OpenAI API Key",
+          arguments: [this],
+        },
+        "openaiApiKey",
+        openaiApiKey ? "••••••••" : "Not configured"
+      );
+      apiKeyItem.iconPath = new vscode.ThemeIcon("key");
+      items.push(apiKeyItem);
+    } else if (this.llmProvider === "local") {
+      const localLlmBaseUrl = vscode.workspace
+        .getConfiguration("worklogGenerator")
+        .get("localLlmBaseUrl", "http://localhost:11434/v1");
+        
+      const localLlmModelName = vscode.workspace
+        .getConfiguration("worklogGenerator")
+        .get("localLlmModelName", "phi");
+        
+      const baseUrlItem = new WorklogItem(
+        "🔗 Local LLM Base URL",
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: "vscode-worklog.configureLocalLlmBaseUrl",
+          title: "Configure Local LLM Base URL",
+          arguments: [this],
+        },
+        "localLlmBaseUrl",
+        localLlmBaseUrl
+      );
+      baseUrlItem.iconPath = new vscode.ThemeIcon("link");
+      items.push(baseUrlItem);
+      
+      const modelNameItem = new WorklogItem(
+        "🏷️ Local LLM Model Name",
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: "vscode-worklog.configureLocalLlmModelName",
+          title: "Configure Local LLM Model Name",
+          arguments: [this],
+        },
+        "localLlmModelName",
+        localLlmModelName
+      );
+      modelNameItem.iconPath = new vscode.ThemeIcon("symbol-variable");
+      items.push(modelNameItem);
+    }
 
     return items;
   }
@@ -351,6 +426,19 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         return "Business";
     }
   }
+  
+  getLlmProviderLabel(): string {
+    switch (this.llmProvider) {
+      case "gemini":
+        return "Google Gemini";
+      case "openai":
+        return "OpenAI";
+      case "local":
+        return "Local LLM";
+      default:
+        return "Google Gemini";
+    }
+  }
 
   async selectLlmProvider(): Promise<void> {
     const selected = await vscode.window.showQuickPick(
@@ -367,6 +455,12 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
           description: "Advanced reasoning - Uses gpt-4o model",
           detail: "Great for complex code analysis",
         },
+        {
+          label: "🏠 Local LLM",
+          value: "local",
+          description: "Use your own locally hosted LLM",
+          detail: "Privacy-focused option with customizable model",
+        },
       ],
       {
         placeHolder: "Choose your AI provider",
@@ -381,6 +475,107 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       await vscode.workspace
         .getConfiguration("worklogGenerator")
         .update("defaultLlmProvider", selected.value, vscode.ConfigurationTarget.Global);
+      
+      // Handle configuration based on the selected provider
+      if (selected.value === "gemini") {
+        const currentApiKey = vscode.workspace
+          .getConfiguration("worklogGenerator")
+          .get("geminiApiKey", "");
+          
+        if (!currentApiKey) {
+          const apiKey = await vscode.window.showInputBox({
+            prompt: "Enter your Google Gemini API key",
+            placeHolder: "Gemini API key",
+            password: true,
+            validateInput: (value) => {
+              if (!value) {
+                return "API key is required";
+              }
+              return null;
+            }
+          });
+          
+          if (apiKey) {
+            await vscode.workspace
+              .getConfiguration("worklogGenerator")
+              .update("geminiApiKey", apiKey, vscode.ConfigurationTarget.Global);
+          }
+        }
+      } else if (selected.value === "openai") {
+        const currentApiKey = vscode.workspace
+          .getConfiguration("worklogGenerator")
+          .get("openaiApiKey", "");
+          
+        if (!currentApiKey) {
+          const apiKey = await vscode.window.showInputBox({
+            prompt: "Enter your OpenAI API key",
+            placeHolder: "OpenAI API key",
+            password: true,
+            validateInput: (value) => {
+              if (!value) {
+                return "API key is required";
+              }
+              return null;
+            }
+          });
+          
+          if (apiKey) {
+            await vscode.workspace
+              .getConfiguration("worklogGenerator")
+              .update("openaiApiKey", apiKey, vscode.ConfigurationTarget.Global);
+          }
+        }
+      } else if (selected.value === "local") {
+        const currentBaseUrl = vscode.workspace
+          .getConfiguration("worklogGenerator")
+          .get("localLlmBaseUrl", "http://localhost:11434/v1");
+          
+        const baseUrl = await vscode.window.showInputBox({
+          prompt: "Enter the base URL for your local LLM API",
+          placeHolder: "e.g., http://localhost:11434/v1",
+          value: currentBaseUrl,
+          validateInput: (value) => {
+            if (!value) {
+              return "Base URL is required";
+            }
+            try {
+              new URL(value);
+              return null;
+            } catch (e) {
+              return "Please enter a valid URL";
+            }
+          }
+        });
+        
+        if (baseUrl) {
+          await vscode.workspace
+            .getConfiguration("worklogGenerator")
+            .update("localLlmBaseUrl", baseUrl, vscode.ConfigurationTarget.Global);
+            
+          const currentModelName = vscode.workspace
+            .getConfiguration("worklogGenerator")
+            .get("localLlmModelName", "phi");
+            
+          const modelName = await vscode.window.showInputBox({
+            prompt: "Enter the model name for your local LLM",
+            placeHolder: "e.g., phi, llama, mistral",
+            value: currentModelName,
+            validateInput: (value) => {
+              if (!value) {
+                return "Model name is required";
+              }
+              return null;
+            }
+          });
+          
+          if (modelName) {
+            await vscode.workspace
+              .getConfiguration("worklogGenerator")
+              .update("localLlmModelName", modelName, vscode.ConfigurationTarget.Global);
+          }
+        }
+      }
+      
       this.refresh();
       vscode.window.showInformationMessage(`✅ AI Provider changed to ${selected.label}`);
     }
