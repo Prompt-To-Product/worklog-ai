@@ -27,13 +27,13 @@
     "vscode": "^1.60.0"
   },
   "categories": [
-    "Productivity",
-    "Ai Tools",
-    "Documentation",
-    "Developer Tools",
-    "Source Control",
-    "Code Review"
-  ],
+  "Formatters",
+  "Programming Languages",
+  "SCM Providers",
+  "Snippets",
+  "Testing",
+  "Other"
+],
   "activationEvents": [
     "onView:worklogGeneratorView"
   ],
