@@ -9,7 +9,7 @@ Generate professional worklogs instantly from your code changes using AI.
 ## What's new in Worklog AI
 
 - **Enhanced UI**: Improved button labels and organization for better usability
-- **Multiple AI Models**: Choose between Google Gemini or OpenAI for worklog generation
+- **Multiple AI Models**: Choose between Google Gemini, OpenAI, or your own locally hosted LLM for worklog generation
 - **Custom Worklog Styles**: Generate worklogs in Technical, Business, or Daily Stand-up formats
 - **Git Integration**: Create worklogs from uncommitted changes or specific commits
 - **One-Click Export**: Easily copy or save your worklogs
@@ -29,6 +29,10 @@ The extension leverages advanced AI models (Google Gemini or OpenAI) to understa
 ## Features
 
 - **AI-Powered Analysis**: Intelligent parsing of code changes to identify meaningful modifications
+- **Multiple AI Providers**:
+  - **Google Gemini**: Fast and efficient AI model for most use cases
+  - **OpenAI**: Advanced reasoning capabilities for complex code analysis
+  - **Local LLM**: Use your own locally hosted LLM for privacy and customization ([setup guide](LOCAL_LLM_SETUP.md))
 - **Multiple Worklog Styles**:
   - **Technical Style**: Detailed implementation specifics for developer handoffs
   - **Business Style**: Business impact with minimal technical jargon for stakeholder reports
@@ -51,9 +55,10 @@ The extension leverages advanced AI models (Google Gemini or OpenAI) to understa
 ## Getting Started
 
 1. **Install the extension** from the VS Code Marketplace
-2. **Configure your API key**:
+2. **Configure your API key** (if using cloud providers):
    - For Google Gemini: Get your API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
    - For OpenAI: Get your API key from [OpenAI Platform](https://platform.openai.com/api-keys)
+   - For Local LLM: Configure your base URL and model name ([see setup guide](LOCAL_LLM_SETUP.md))
 3. **Open the Worklog AI panel** from the sidebar
 4. **Generate your first worklog** by clicking "Create Worklog from Uncommitted Changes"
 

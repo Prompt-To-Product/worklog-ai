@@ -10,15 +10,21 @@ export async function generateWorklog(
   worklogStyle: string
 ): Promise<string> {
   try {
-    // Get API keys from settings
+    // Get API keys and settings from configuration
     const geminiApiKey = vscode.workspace
       .getConfiguration("worklogGenerator")
       .get("geminiApiKey", "");
     const openaiApiKey = vscode.workspace
       .getConfiguration("worklogGenerator")
       .get("openaiApiKey", "");
+    const localLlmBaseUrl = vscode.workspace
+      .getConfiguration("worklogGenerator")
+      .get("localLlmBaseUrl", "http://localhost:11434/v1");
+    const localLlmModelName = vscode.workspace
+      .getConfiguration("worklogGenerator")
+      .get("localLlmModelName", "phi");
 
-    // Validate API key based on selected provider
+    // Validate API key or settings based on selected provider
     if (llmProvider === "gemini" && !geminiApiKey) {
       throw new Error("Gemini API key not configured. Please add it in the extension settings.");
     }
@@ -27,14 +33,20 @@ export async function generateWorklog(
       throw new Error("OpenAI API key not configured. Please add it in the extension settings.");
     }
 
+    if (llmProvider === "local" && !localLlmBaseUrl) {
+      throw new Error("Local LLM Base URL not configured. Please add it in the extension settings.");
+    }
+
     // Create prompt based on the selected style
     const prompt = createPrompt(changes, worklogStyle);
 
     // Call the appropriate LLM API
     if (llmProvider === "gemini") {
       return await callGeminiApi(prompt, geminiApiKey);
-    } else {
+    } else if (llmProvider === "openai") {
       return await callOpenAiApi(prompt, openaiApiKey);
+    } else {
+      return await callLocalLlmApi(prompt, localLlmBaseUrl, localLlmModelName);
     }
   } catch (error) {
     console.error("Error generating worklog:", error);
@@ -231,6 +243,53 @@ async function callOpenAiApi(prompt: string, apiKey: string): Promise<string> {
     }
     throw new Error(
       `Failed to call OpenAI API: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+/**
+ * Call the Local LLM API to generate a worklog
+ */
+async function callLocalLlmApi(prompt: string, baseUrl: string, modelName: string): Promise<string> {
+  try {
+    const chatCompletionsUrl = `${baseUrl}/chat/completions`;
+    
+    const response = await axios.post(
+      chatCompletionsUrl,
+      {
+        model: modelName,
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant that generates worklogs based on code changes.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        temperature: 0.2,
+        max_tokens: 1024,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // Extract the generated text from the response
+    const generatedText = response.data.choices[0].message.content;
+    return generatedText;
+  } catch (error) {
+    console.error("Error calling Local LLM API:", error);
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(
+        `Local LLM API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`
+      );
+    }
+    throw new Error(
+      `Failed to call Local LLM API: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 }

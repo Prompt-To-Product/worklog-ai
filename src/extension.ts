@@ -32,6 +32,7 @@ export function activate(context: vscode.ExtensionContext) {
               description: "Uses gemini-2.0-flash model",
             },
             { label: "OpenAI", value: "openai", description: "Uses gpt-4o model" },
+            { label: "Local LLM", value: "local", description: "Uses your locally hosted LLM" },
           ],
           {
             placeHolder: "Select AI Provider",
@@ -41,6 +42,120 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (!llmProvider) {
           return; // User cancelled
+        }
+
+        // Check if API key is configured for the selected provider
+        if (llmProvider.value === "gemini") {
+          const geminiApiKey = vscode.workspace
+            .getConfiguration("worklogGenerator")
+            .get("geminiApiKey", "");
+            
+          if (!geminiApiKey) {
+            const apiKey = await vscode.window.showInputBox({
+              prompt: "Enter your Google Gemini API key",
+              placeHolder: "Gemini API key",
+              password: true,
+              validateInput: (value) => {
+                if (!value) {
+                  return "API key is required";
+                }
+                return null;
+              }
+            });
+            
+            if (!apiKey) {
+              vscode.window.showErrorMessage("Gemini API key is required to generate a worklog.");
+              return;
+            }
+            
+            await vscode.workspace
+              .getConfiguration("worklogGenerator")
+              .update("geminiApiKey", apiKey, vscode.ConfigurationTarget.Global);
+          }
+        } else if (llmProvider.value === "openai") {
+          const openaiApiKey = vscode.workspace
+            .getConfiguration("worklogGenerator")
+            .get("openaiApiKey", "");
+            
+          if (!openaiApiKey) {
+            const apiKey = await vscode.window.showInputBox({
+              prompt: "Enter your OpenAI API key",
+              placeHolder: "OpenAI API key",
+              password: true,
+              validateInput: (value) => {
+                if (!value) {
+                  return "API key is required";
+                }
+                return null;
+              }
+            });
+            
+            if (!apiKey) {
+              vscode.window.showErrorMessage("OpenAI API key is required to generate a worklog.");
+              return;
+            }
+            
+            await vscode.workspace
+              .getConfiguration("worklogGenerator")
+              .update("openaiApiKey", apiKey, vscode.ConfigurationTarget.Global);
+          }
+        } else if (llmProvider.value === "local") {
+          const localLlmBaseUrl = vscode.workspace
+            .getConfiguration("worklogGenerator")
+            .get("localLlmBaseUrl", "");
+            
+          if (!localLlmBaseUrl) {
+            const baseUrl = await vscode.window.showInputBox({
+              prompt: "Enter the base URL for your local LLM API",
+              placeHolder: "e.g., http://localhost:11434/v1",
+              validateInput: (value) => {
+                if (!value) {
+                  return "Base URL is required";
+                }
+                try {
+                  new URL(value);
+                  return null;
+                } catch (e) {
+                  return "Please enter a valid URL";
+                }
+              }
+            });
+            
+            if (!baseUrl) {
+              vscode.window.showErrorMessage("Local LLM Base URL is required to generate a worklog.");
+              return;
+            }
+            
+            await vscode.workspace
+              .getConfiguration("worklogGenerator")
+              .update("localLlmBaseUrl", baseUrl, vscode.ConfigurationTarget.Global);
+          }
+          
+          const localLlmModelName = vscode.workspace
+            .getConfiguration("worklogGenerator")
+            .get("localLlmModelName", "");
+            
+          if (!localLlmModelName) {
+            const modelName = await vscode.window.showInputBox({
+              prompt: "Enter the model name for your local LLM",
+              placeHolder: "e.g., phi, llama, mistral",
+              validateInput: (value) => {
+                if (!value) {
+                  return "Model name is required";
+                }
+                return null;
+              }
+            });
+            
+            if (!modelName) {
+              vscode.window.showErrorMessage("Local LLM Model Name is required to generate a worklog.");
+              return;
+            }
+            
+            await vscode.workspace
+              .getConfiguration("worklogGenerator")
+              .update("localLlmModelName", modelName, vscode.ConfigurationTarget.Global);
+          }
         }
 
         // Get worklog style choice
@@ -221,6 +336,115 @@ export function activate(context: vscode.ExtensionContext) {
       "vscode-worklog.showCommitSelector",
       (treeView: WorklogTreeDataProvider) => {
         treeView.showCommitSelector();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "vscode-worklog.configureLocalLlmBaseUrl",
+      async (treeView: WorklogTreeDataProvider) => {
+        const currentBaseUrl = vscode.workspace
+          .getConfiguration("worklogGenerator")
+          .get("localLlmBaseUrl", "http://localhost:11434/v1");
+          
+        const baseUrl = await vscode.window.showInputBox({
+          prompt: "Enter the base URL for your local LLM API",
+          placeHolder: "e.g., http://localhost:11434/v1",
+          value: currentBaseUrl,
+          validateInput: (value) => {
+            if (!value) {
+              return "Base URL is required";
+            }
+            try {
+              new URL(value);
+              return null;
+            } catch (e) {
+              return "Please enter a valid URL";
+            }
+          }
+        });
+        
+        if (baseUrl) {
+          await vscode.workspace
+            .getConfiguration("worklogGenerator")
+            .update("localLlmBaseUrl", baseUrl, vscode.ConfigurationTarget.Global);
+          treeView.refresh();
+          vscode.window.showInformationMessage(`✅ Local LLM Base URL updated to ${baseUrl}`);
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      "vscode-worklog.configureLocalLlmModelName",
+      async (treeView: WorklogTreeDataProvider) => {
+        const currentModelName = vscode.workspace
+          .getConfiguration("worklogGenerator")
+          .get("localLlmModelName", "phi");
+          
+        const modelName = await vscode.window.showInputBox({
+          prompt: "Enter the model name for your local LLM",
+          placeHolder: "e.g., phi, llama, mistral",
+          value: currentModelName,
+          validateInput: (value) => {
+            if (!value) {
+              return "Model name is required";
+            }
+            return null;
+          }
+        });
+        
+        if (modelName) {
+          await vscode.workspace
+            .getConfiguration("worklogGenerator")
+            .update("localLlmModelName", modelName, vscode.ConfigurationTarget.Global);
+          treeView.refresh();
+          vscode.window.showInformationMessage(`✅ Local LLM Model Name updated to ${modelName}`);
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      "vscode-worklog.configureGeminiApiKey",
+      async (treeView: WorklogTreeDataProvider) => {
+        const apiKey = await vscode.window.showInputBox({
+          prompt: "Enter your Google Gemini API key",
+          placeHolder: "Gemini API key",
+          password: true,
+          validateInput: (value) => {
+            if (!value) {
+              return "API key is required";
+            }
+            return null;
+          }
+        });
+        
+        if (apiKey) {
+          await vscode.workspace
+            .getConfiguration("worklogGenerator")
+            .update("geminiApiKey", apiKey, vscode.ConfigurationTarget.Global);
+          treeView.refresh();
+          vscode.window.showInformationMessage(`✅ Gemini API key updated successfully`);
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      "vscode-worklog.configureOpenAiApiKey",
+      async (treeView: WorklogTreeDataProvider) => {
+        const apiKey = await vscode.window.showInputBox({
+          prompt: "Enter your OpenAI API key",
+          placeHolder: "OpenAI API key",
+          password: true,
+          validateInput: (value) => {
+            if (!value) {
+              return "API key is required";
+            }
+            return null;
+          }
+        });
+        
+        if (apiKey) {
+          await vscode.workspace
+            .getConfiguration("worklogGenerator")
+            .update("openaiApiKey", apiKey, vscode.ConfigurationTarget.Global);
+          treeView.refresh();
+          vscode.window.showInformationMessage(`✅ OpenAI API key updated successfully`);
+        }
       }
     )
   );

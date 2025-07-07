@@ -5,6 +5,16 @@ All notable changes to the "Worklog AI" extension will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-07-07
+
+### Added
+- Added support for locally hosted LLMs as a third AI provider option
+- New configuration options for local LLM base URL and model name
+- UI for managing local LLM settings in the extension sidebar
+- Improved API key configuration flow for all providers
+- Automatic prompting for API keys when selecting providers
+- Added detailed setup guide for running local LLMs with Ollama
+
 ## [0.1.9] - 2025-07-07
 
 ### Fixed
