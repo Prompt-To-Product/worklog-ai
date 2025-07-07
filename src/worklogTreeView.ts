@@ -468,7 +468,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         {
           location: vscode.ProgressLocation.Notification,
           title: "🚀 Generating worklog from commit",
-          cancellable: false,
+          cancellable: true,
         },
         async (progress) => {
           try {
@@ -646,7 +646,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         {
           location: vscode.ProgressLocation.Notification,
           title: "🚀 Generating worklog from current changes",
-          cancellable: false,
+          cancellable: true,
         },
         async (progress) => {
           try {
@@ -730,7 +730,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         {
           location: vscode.ProgressLocation.Notification,
           title: "🚀 Generating worklog from selected commit",
-          cancellable: false,
+          cancellable: true,
         },
         async (progress) => {
           try {

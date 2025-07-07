@@ -483,8 +483,19 @@ export class WorklogPanel {
 
   private async exportWorklog(worklog: string) {
     // Show save dialog
+    // Get the workspace folder path or user's home directory as fallback
+    let basePath = '';
+    if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
+      basePath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    } else {
+      basePath = require('os').homedir();
+    }
+    
+    const fileName = `worklog-${new Date().toISOString().split('T')[0]}.md`;
+    const fullPath = require('path').join(basePath, fileName);
+    
     const saveUri = await vscode.window.showSaveDialog({
-      defaultUri: vscode.Uri.file(`worklog-${new Date().toISOString().split('T')[0]}.md`),
+      defaultUri: vscode.Uri.file(fullPath),
       filters: {
         'Markdown Files': ['md'],
         'Text Files': ['txt'],

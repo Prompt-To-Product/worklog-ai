@@ -5,6 +5,12 @@ All notable changes to the "Worklog AI" extension will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.9] - 2025-07-07
+
+### Fixed
+- Fixed "permission denied" error when saving worklogs by using workspace folder path instead of root directory
+- Improved file path handling for worklog export functionality
+
 ## [0.1.8] - 2025-07-07
 
 ### Changed
