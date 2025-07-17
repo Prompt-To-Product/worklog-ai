@@ -149,7 +149,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       "🤖 AI Provider",
       vscode.TreeItemCollapsibleState.None,
       {
-        command: "vscode-worklog.selectLlmProvider",
+        command: "worklog-ai.selectLlmProvider",
         title: "Select AI Provider",
         arguments: [this],
       },
@@ -164,7 +164,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       "📝 Worklog Style",
       vscode.TreeItemCollapsibleState.None,
       {
-        command: "vscode-worklog.selectWorklogStyle",
+        command: "worklog-ai.selectWorklogStyle",
         title: "Select Worklog Style",
         arguments: [this],
       },
@@ -184,7 +184,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         "🔑 Gemini API Key",
         vscode.TreeItemCollapsibleState.None,
         {
-          command: "vscode-worklog.configureGeminiApiKey",
+          command: "worklog-ai.configureGeminiApiKey",
           title: "Configure Gemini API Key",
           arguments: [this],
         },
@@ -202,7 +202,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         "🔑 OpenAI API Key",
         vscode.TreeItemCollapsibleState.None,
         {
-          command: "vscode-worklog.configureOpenAiApiKey",
+          command: "worklog-ai.configureOpenAiApiKey",
           title: "Configure OpenAI API Key",
           arguments: [this],
         },
@@ -224,7 +224,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         "🔗 Local LLM Base URL",
         vscode.TreeItemCollapsibleState.None,
         {
-          command: "vscode-worklog.configureLocalLlmBaseUrl",
+          command: "worklog-ai.configureLocalLlmBaseUrl",
           title: "Configure Local LLM Base URL",
           arguments: [this],
         },
@@ -238,7 +238,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         "🏷️ Local LLM Model Name",
         vscode.TreeItemCollapsibleState.None,
         {
-          command: "vscode-worklog.configureLocalLlmModelName",
+          command: "worklog-ai.configureLocalLlmModelName",
           title: "Configure Local LLM Model Name",
           arguments: [this],
         },
@@ -260,7 +260,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       "📍 Current Branch",
       vscode.TreeItemCollapsibleState.None,
       {
-        command: "vscode-worklog.selectBranch",
+        command: "worklog-ai.selectBranch",
         title: "Select Branch",
         arguments: [this],
       },
@@ -276,7 +276,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         "🚀 Generate from Current Changes",
         vscode.TreeItemCollapsibleState.None,
         {
-          command: "vscode-worklog.generateWorklogFromCurrentChanges",
+          command: "worklog-ai.generateWorklogFromCurrentChanges",
           title: "Generate from Current Changes",
           arguments: [this],
         },
@@ -286,12 +286,27 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       generateFromCurrentItem.iconPath = new vscode.ThemeIcon("play-circle");
       items.push(generateFromCurrentItem);
 
+      // Generate commit message - styled as button
+      const generateCommitMessageItem = new WorklogItem(
+        "📝 Generate Commit Message",
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: "worklog-ai.generateCommitMessage",
+          title: "Generate Commit Message",
+          arguments: [this],
+        },
+        "generateCommitMessageButton",
+        "From uncommitted changes"
+      );
+      generateCommitMessageItem.iconPath = new vscode.ThemeIcon("git-commit");
+      items.push(generateCommitMessageItem);
+
       // Generate from commit - styled as button
       const generateFromCommitItem = new WorklogItem(
         "📝 Generate from Commit",
         vscode.TreeItemCollapsibleState.None,
         {
-          command: "vscode-worklog.showCommitSelector",
+          command: "worklog-ai.showCommitSelector",
           title: "Generate from Commit",
           arguments: [this],
         },
@@ -338,7 +353,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         commit.message.split("\n")[0].substring(0, 50) + (commit.message.length > 50 ? "..." : ""),
         vscode.TreeItemCollapsibleState.None,
         {
-          command: "vscode-worklog.generateWorklogFromSpecificCommit",
+          command: "worklog-ai.generateWorklogFromSpecificCommit",
           title: "Generate Worklog from Commit",
           arguments: [this, commit.hash],
         },
@@ -354,7 +369,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         `... and ${this.userCommits.length - 10} more commits`,
         vscode.TreeItemCollapsibleState.None,
         {
-          command: "vscode-worklog.showAllCommits",
+          command: "worklog-ai.showAllCommits",
           title: "Show All Commits",
           arguments: [this],
         },
@@ -375,7 +390,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       "👀 View Worklog",
       vscode.TreeItemCollapsibleState.None,
       {
-        command: "vscode-worklog.viewWorklog",
+        command: "worklog-ai.viewWorklog",
         title: "View Worklog",
         arguments: [this.generatedWorklog],
       },
@@ -389,7 +404,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       "📋 Copy to Clipboard",
       vscode.TreeItemCollapsibleState.None,
       {
-        command: "vscode-worklog.copyWorklog",
+        command: "worklog-ai.copyWorklog",
         title: "Copy Worklog",
         arguments: [this.generatedWorklog],
       },
@@ -403,7 +418,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       "💾 Save to File",
       vscode.TreeItemCollapsibleState.None,
       {
-        command: "vscode-worklog.exportWorklog",
+        command: "worklog-ai.exportWorklog",
         title: "Export Worklog",
         arguments: [this.generatedWorklog],
       },
@@ -711,7 +726,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
               await vscode.env.clipboard.writeText(this.generatedWorklog);
               vscode.window.showInformationMessage("📋 Worklog copied to clipboard!");
             } else if (action === "💾 Save to File") {
-              vscode.commands.executeCommand("vscode-worklog.exportWorklog", this.generatedWorklog);
+              vscode.commands.executeCommand("worklog-ai.exportWorklog", this.generatedWorklog);
             }
           } catch (error) {
             this.isGenerating = false;
@@ -827,6 +842,102 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
     }
   }
 
+  async generateCommitMessage(): Promise<void> {
+    if (this.isGenerating) {
+      vscode.window.showWarningMessage("⏳ Already generating, please wait...");
+      return;
+    }
+
+    try {
+      this.isGenerating = true;
+      this.refresh();
+
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: "🚀 Generating commit message",
+          cancellable: true,
+        },
+        async (progress) => {
+          try {
+            progress.report({ increment: 0, message: "Analyzing git changes..." });
+
+            const changes = await getGitChanges();
+
+            if (!changes || changes.trim() === "") {
+              vscode.window.showInformationMessage("📝 No changes detected to generate a commit message.");
+              this.isGenerating = false;
+              this.refresh();
+              return;
+            }
+
+            progress.report({ increment: 30, message: "Processing with AI..." });
+
+            // Import the generateCommitMessage function
+            const { generateCommitMessage } = require("./worklogGenerator");
+            
+            const result = await generateCommitMessage(
+              changes,
+              this.llmProvider
+            );
+
+            progress.report({ increment: 80, message: "Finalizing commit message..." });
+
+            // Stop the loader before showing the result
+            this.isGenerating = false;
+            this.refresh();
+
+            progress.report({ increment: 100, message: "Complete!" });
+
+            // Show the commit message in a dialog with options to copy
+            const formattedResult = `${result.message}\n\n${result.description}`;
+            
+            // Store the commit message in extension context
+            this.context.workspaceState.update("lastGeneratedCommitMessage", result.message);
+            this.context.workspaceState.update("lastGeneratedCommitDescription", result.description);
+
+            // Show the result in a dialog with options
+            const action = await vscode.window.showInformationMessage(
+              `✅ Commit message generated:\n\n${result.message}`,
+              "📋 Copy Message",
+              "📋 Copy All",
+              "📝 View Details"
+            );
+
+            if (action === "📋 Copy Message") {
+              await vscode.env.clipboard.writeText(result.message);
+              vscode.window.showInformationMessage("📋 Commit message copied to clipboard!");
+            } else if (action === "📋 Copy All") {
+              await vscode.env.clipboard.writeText(formattedResult);
+              vscode.window.showInformationMessage("📋 Commit message and description copied to clipboard!");
+            } else if (action === "📝 View Details") {
+              // Show the full commit message and description in a new editor
+              const doc = await vscode.workspace.openTextDocument({
+                content: `# Commit Message\n\n${result.message}\n\n# Description\n\n${result.description}`,
+                language: "markdown"
+              });
+              await vscode.window.showTextDocument(doc);
+            }
+          } catch (error) {
+            this.isGenerating = false;
+            this.refresh();
+            vscode.window.showErrorMessage(
+              `❌ Error generating commit message: ${
+                error instanceof Error ? error.message : String(error)
+              }`
+            );
+          }
+        }
+      );
+    } catch (error) {
+      this.isGenerating = false;
+      this.refresh();
+      vscode.window.showErrorMessage(
+        `❌ Error: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
   async generateFromCurrentChanges(): Promise<void> {
     if (this.isGenerating) {
       vscode.window.showWarningMessage("⏳ Already generating a worklog, please wait...");
@@ -889,7 +1000,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
               await vscode.env.clipboard.writeText(this.generatedWorklog);
               vscode.window.showInformationMessage("📋 Worklog copied to clipboard!");
             } else if (action === "💾 Save to File") {
-              vscode.commands.executeCommand("vscode-worklog.exportWorklog", this.generatedWorklog);
+              vscode.commands.executeCommand("worklog-ai.exportWorklog", this.generatedWorklog);
             }
           } catch (error) {
             this.isGenerating = false;
@@ -973,7 +1084,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
               await vscode.env.clipboard.writeText(this.generatedWorklog);
               vscode.window.showInformationMessage("📋 Worklog copied to clipboard!");
             } else if (action === "💾 Save to File") {
-              vscode.commands.executeCommand("vscode-worklog.exportWorklog", this.generatedWorklog);
+              vscode.commands.executeCommand("worklog-ai.exportWorklog", this.generatedWorklog);
             }
           } catch (error) {
             this.isGenerating = false;
