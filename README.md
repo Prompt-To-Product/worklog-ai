@@ -6,13 +6,15 @@
 
 Generate professional worklogs instantly from your code changes using AI.
 
-## What's new in Worklog AI
+## What's New in v0.2.2
 
-- **Enhanced UI**: Improved button labels and organization for better usability
-- **Multiple AI Models**: Choose between Google Gemini, OpenAI, or your own locally hosted LLM for worklog generation
-- **Custom Worklog Styles**: Generate worklogs in Technical, Business, or Daily Stand-up formats
-- **Git Integration**: Create worklogs from uncommitted changes or specific commits
-- **One-Click Export**: Easily copy or save your worklogs
+- **New Feature**: Generate commit messages and descriptions from code changes
+- Added "Generate Commit Message" button to the sidebar
+- Specialized AI prompt for creating concise, imperative-style commit messages
+- Options to copy just the message or both message and description
+- Fixed the generate commit button view
+
+[See full changelog](https://github.com/Prompt-To-Product/worklog-ai/blob/main/CHANGELOG.md)
 
 ## Demo
 

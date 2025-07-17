@@ -2,6 +2,111 @@ import * as vscode from "vscode";
 import axios from "axios";
 
 /**
+ * Generate a commit message and description based on code changes
+ */
+export async function generateCommitMessage(
+  changes: string,
+  llmProvider: string
+): Promise<{ message: string; description: string }> {
+  try {
+    // Get API keys and settings from configuration
+    const geminiApiKey = vscode.workspace
+      .getConfiguration("worklogGenerator")
+      .get("geminiApiKey", "");
+    const openaiApiKey = vscode.workspace
+      .getConfiguration("worklogGenerator")
+      .get("openaiApiKey", "");
+    const localLlmBaseUrl = vscode.workspace
+      .getConfiguration("worklogGenerator")
+      .get("localLlmBaseUrl", "http://localhost:11434/v1");
+    const localLlmModelName = vscode.workspace
+      .getConfiguration("worklogGenerator")
+      .get("localLlmModelName", "phi");
+
+    // Validate API key or settings based on selected provider
+    if (llmProvider === "gemini" && !geminiApiKey) {
+      throw new Error("Gemini API key not configured. Please add it in the extension settings.");
+    }
+
+    if (llmProvider === "openai" && !openaiApiKey) {
+      throw new Error("OpenAI API key not configured. Please add it in the extension settings.");
+    }
+
+    if (llmProvider === "local" && !localLlmBaseUrl) {
+      throw new Error("Local LLM Base URL not configured. Please add it in the extension settings.");
+    }
+
+    // Create prompt for commit message generation
+    const prompt = createCommitMessagePrompt(changes);
+
+    // Call the appropriate LLM API
+    let response: string;
+    if (llmProvider === "gemini") {
+      response = await callGeminiApi(prompt, geminiApiKey);
+    } else if (llmProvider === "openai") {
+      response = await callOpenAiApi(prompt, openaiApiKey);
+    } else {
+      response = await callLocalLlmApi(prompt, localLlmBaseUrl, localLlmModelName);
+    }
+
+    // Parse the response to extract commit message and description
+    const lines = response.trim().split('\n');
+    let message = '';
+    let description = '';
+
+    // Extract the commit message (first line)
+    if (lines.length > 0) {
+      // Remove any markdown formatting or prefixes
+      message = lines[0].replace(/^(#|\*\*|__) ?/, '').replace(/ ?(:|\*\*|__)$/, '');
+      
+      // If the message starts with "Commit Message:" or similar, remove it
+      message = message.replace(/^(Commit Message|Message|Title|Subject): ?/i, '');
+      
+      // Validate message length
+      if (message.length > 100) {
+        message = message.substring(0, 97) + '...';
+      }
+    }
+
+    // Extract the description (remaining lines)
+    if (lines.length > 1) {
+      // Skip any empty lines after the first line
+      let startIndex = 1;
+      while (startIndex < lines.length && lines[startIndex].trim() === '') {
+        startIndex++;
+      }
+      
+      // Collect the description lines
+      const descriptionLines = [];
+      for (let i = startIndex; i < lines.length; i++) {
+        // Skip lines that are headers or separators
+        if (lines[i].startsWith('# ') || lines[i].match(/^[-=]{3,}$/)) {
+          continue;
+        }
+        
+        // Remove bullet points and other markdown formatting
+        let line = lines[i].replace(/^[-*+] /, '');
+        
+        // Add the line to the description
+        descriptionLines.push(line);
+      }
+      
+      description = descriptionLines.join('\n');
+    }
+
+    return { 
+      message: message.trim(), 
+      description: description.trim() 
+    };
+  } catch (error) {
+    console.error("Error generating commit message:", error);
+    throw new Error(
+      `Failed to generate commit message: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+/**
  * Generate a worklog based on code changes using the specified LLM provider and style
  */
 export async function generateWorklog(
@@ -38,7 +143,7 @@ export async function generateWorklog(
     }
 
     // Create prompt based on the selected style
-    const prompt = createPrompt(changes, worklogStyle);
+    const prompt = createWorklogPrompt(changes, worklogStyle);
 
     // Call the appropriate LLM API
     if (llmProvider === "gemini") {
@@ -57,9 +162,51 @@ export async function generateWorklog(
 }
 
 /**
- * Create a prompt for the LLM based on the selected style
+ * Create a prompt for commit message generation
  */
-function createPrompt(changes: string, worklogStyle: string): string {
+function createCommitMessagePrompt(changes: string): string {
+  // Limit changes to avoid exceeding token limits
+  const limitedChanges =
+    changes.length > 10000 ? changes.substring(0, 10000) + "...[truncated]" : changes;
+
+  return `
+You are a professional software developer creating a commit message for code changes. Analyze the provided code changes and generate a concise commit message and description.
+
+REQUIREMENTS:
+- Generate a commit message that is between 1 and 100 characters
+- The commit message should be clear, concise, and descriptive
+- Use imperative mood (e.g., "Add", "Fix", "Update", not "Added", "Fixed", "Updated")
+- Focus on WHAT was changed and WHY, not HOW
+- Do not include issue numbers or ticket references
+- Capitalize the first word and do not end with a period
+- For the description, provide 3-5 bullet points that explain the changes in more detail
+- Each bullet point should start with a dash (-)
+- The description should provide context that isn't obvious from the commit message
+
+EXAMPLE COMMIT MESSAGES:
+- "Add user authentication feature"
+- "Fix null pointer exception in payment processing"
+- "Update documentation for API endpoints"
+- "Refactor database connection handling"
+- "Optimize image loading performance"
+
+EXAMPLE DESCRIPTIONS:
+- Implemented JWT token-based authentication
+- Added login and registration endpoints
+- Created user session management
+- Updated tests to cover authentication flows
+
+CODE CHANGES TO ANALYZE:
+${limitedChanges}
+
+Generate a commit message and description now:
+`;
+}
+
+/**
+ * Create a prompt for worklog generation based on the selected style
+ */
+function createWorklogPrompt(changes: string, worklogStyle: string): string {
   // Limit changes to avoid exceeding token limits
   const limitedChanges =
     changes.length > 10000 ? changes.substring(0, 10000) + "...[truncated]" : changes;
