@@ -10,8 +10,8 @@ Generate professional worklogs instantly from your code changes using AI.
 
 - **Enhanced UI**: Improved button labels and organization for better usability
 - **Multiple AI Models**: Choose between Google Gemini, OpenAI, or your own locally hosted LLM for worklog generation
-- **Custom Worklog Styles**: Generate worklogs in Technical, Business, or Daily Stand-up formats
-- **Git Integration**: Create worklogs from uncommitted changes or specific commits
+- **Multiple Output Types**: Generate technical worklogs, business-focused worklogs, or commit messages
+- **Git Integration**: Create worklogs from uncommitted changes, today's changes, or specific commits
 - **One-Click Export**: Easily copy or save your worklogs
 
 ## Demo
@@ -36,7 +36,8 @@ The extension leverages advanced AI models (Google Gemini or OpenAI) to understa
 - **Multiple Worklog Styles**:
   - **Technical Style**: Detailed implementation specifics for developer handoffs
   - **Business Style**: Business impact with minimal technical jargon for stakeholder reports
-- **Flexible Source Options**: Generate from current uncommitted changes or select specific commits
+  - **Commit Message**: Concise commit message (max 100 characters) with detailed description
+- **Flexible Source Options**: Generate from current uncommitted changes, today's changes, or select specific commits
 - **Customizable Settings**: Configure default AI provider, worklog style, and automation options
 - **Direct Integration**: Access directly from the VS Code sidebar or Source Control view
 
@@ -45,7 +46,7 @@ The extension leverages advanced AI models (Google Gemini or OpenAI) to understa
 | Command                                        | Description                                             |
 | ---------------------------------------------- | ------------------------------------------------------- |
 | ✨ **Generate New Worklog**                    | Open the worklog generation wizard                      |
-| ✨ **Create Worklog from Uncommitted Changes** | Generate a worklog based on current uncommitted changes |
+| ✨ **Create Worklog from Uncommitted Changes** | Generate a worklog based on current uncommitted  today's changes |
 | 📝 **Create Worklog from Commit History**      | Select a specific commit to generate a worklog          |
 | 📤 **Save Worklog to File**                    | Export the generated worklog to a file                  |
 | 📋 **Copy Worklog to Clipboard**               | Copy the generated worklog to clipboard                 |

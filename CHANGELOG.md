@@ -5,6 +5,24 @@ All notable changes to the "Worklog AI" extension will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [0.2.1] - 2025-07-16
+
+### Added
+- New "Generate Commit Message" command with a dedicated button to create concise commit messages
+- Added UI buttons for the new features
+- Added option to directly use generated commit messages in the SCM input box
+
+### Changed
+- Improved detection of today's changes using multiple approaches for better reliability
+- Enhanced commit message integration with SCM to properly format commit messages
+- Updated README to document new features
+- Improved command naming consistency
+
+### Fixed
+- Fixed "No changes detected for today" error with more robust git command handling
+- Fixed SCM integration to properly handle commit message format
+
 ## [0.2.0] - 2025-07-07
 
 ### Added
