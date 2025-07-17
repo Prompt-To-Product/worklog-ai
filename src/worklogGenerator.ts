@@ -2,7 +2,14 @@ import * as vscode from "vscode";
 import axios from "axios";
 
 /**
- * Generate a commit message and description based on code changes
+ * Generates a commit message and description from code changes using a specified LLM provider.
+ *
+ * Retrieves the necessary API key or URL from configuration based on the provider ("gemini", "openai", or "local"), constructs a prompt, and invokes the corresponding LLM API to generate a response. Parses the response to extract a concise commit message and a multi-line description.
+ *
+ * @param changes - The code changes to summarize
+ * @param llmProvider - The LLM provider to use ("gemini", "openai", or "local")
+ * @returns An object containing the generated commit message and description
+ * @throws If the required API key or URL is not configured, or if generation fails
  */
 export async function generateCommitMessage(
   changes: string,
@@ -102,7 +109,14 @@ export async function generateCommitMessage(
 }
 
 /**
- * Generate a worklog based on code changes using the specified LLM provider and style
+ * Generates a worklog summary from code changes using the specified LLM provider and style.
+ *
+ * @param changes - The code changes to summarize
+ * @param llmProvider - The LLM provider to use ("gemini", "openai", or "local")
+ * @param worklogStyle - The style of worklog to generate ("technical" or "business")
+ * @returns The generated worklog text
+ *
+ * @throws If the required API key or configuration for the selected provider is missing
  */
 export async function generateWorklog(
   changes: string,
@@ -157,7 +171,12 @@ export async function generateWorklog(
 }
 
 /**
- * Create a prompt for commit message generation
+ * Constructs a prompt instructing a language model to generate a concise commit message and a detailed description based on provided code changes.
+ *
+ * The prompt enforces style guidelines, provides examples, and limits the input to 10,000 characters to ensure compatibility with LLM token limits.
+ *
+ * @param changes - The code changes to be summarized in the commit message and description
+ * @returns A formatted prompt string for commit message generation
  */
 function createCommitMessagePrompt(changes: string): string {
   // Limit changes to avoid exceeding token limits
@@ -199,7 +218,11 @@ Generate a commit message and description now:
 }
 
 /**
- * Create a prompt for worklog generation based on the selected style
+ * Constructs a prompt instructing a language model to generate a worklog and a daily stand-up (DSU) script from code changes, tailored to either a technical or business style.
+ *
+ * @param changes - The code changes to be summarized, truncated to 10,000 characters if necessary
+ * @param worklogStyle - The desired style for the worklog ("technical" for developer-focused detail, "business" for non-technical summaries)
+ * @returns A formatted prompt string for LLM-based worklog and DSU script generation
  */
 function createWorklogPrompt(changes: string, worklogStyle: string): string {
   // Limit changes to avoid exceeding token limits

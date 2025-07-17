@@ -6,6 +6,11 @@ import { WorklogTreeDataProvider } from "./worklogTreeView";
 import { WorklogPanel } from "./worklogPanel";
 import { registerGitIntegration } from "./gitIntegration";
 
+/**
+ * Activates the Worklog AI extension, registering the tree view, Git integration, and all related commands for AI-powered worklog generation and configuration.
+ *
+ * This function sets up the extension's UI, command handlers, and configuration prompts, enabling users to generate, view, export, and manage worklogs using various AI providers and styles.
+ */
 export function activate(context: vscode.ExtensionContext) {
   console.log("Worklog AI extension is now active");
 
