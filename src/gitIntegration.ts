@@ -34,10 +34,53 @@ export function registerGitIntegration(context: vscode.ExtensionContext) {
         if (lastGeneratedWorklog && inputBox) {
           const currentMessage = inputBox.value;
 
-          // Only append if the message doesn't already contain the worklog
-          if (!currentMessage.includes(lastGeneratedWorklog)) {
-            inputBox.value =
-              currentMessage + (currentMessage ? "\n\n" : "") + "---\n" + lastGeneratedWorklog;
+          // Check if this is a commit message format
+          if (lastGeneratedWorklog.includes("COMMIT MESSAGE:") && lastGeneratedWorklog.includes("COMMIT DESCRIPTION:")) {
+            // Extract just the first line for the commit message
+            const lines = lastGeneratedWorklog.split('\n');
+            let commitMessage = '';
+            let commitDescription = '';
+            
+            // Find the commit message (first non-empty line after "COMMIT MESSAGE:")
+            let foundCommitMessage = false;
+            let foundDescription = false;
+            
+            for (const line of lines) {
+              if (!foundCommitMessage && line.includes("COMMIT MESSAGE:")) {
+                foundCommitMessage = true;
+                continue;
+              }
+              
+              if (foundCommitMessage && !foundDescription && line.trim()) {
+                commitMessage = line.trim();
+                foundCommitMessage = false;
+                foundDescription = true;
+                continue;
+              }
+              
+              if (foundDescription && line.includes("COMMIT DESCRIPTION:")) {
+                continue;
+              }
+              
+              if (foundDescription && line.trim()) {
+                commitDescription += line + '\n';
+              }
+            }
+            
+            // Set the commit message in the SCM input box
+            if (commitMessage) {
+              inputBox.value = commitMessage + '\n\n' + commitDescription;
+            } else {
+              // Fallback to using the whole worklog if parsing fails
+              inputBox.value = currentMessage + (currentMessage ? "\n\n" : "") + "---\n" + lastGeneratedWorklog;
+            }
+          } else {
+            // For regular worklogs, just append
+            // Only append if the message doesn't already contain the worklog
+            if (!currentMessage.includes(lastGeneratedWorklog)) {
+              inputBox.value =
+                currentMessage + (currentMessage ? "\n\n" : "") + "---\n" + lastGeneratedWorklog;
+            }
           }
 
           // Reset the setting
@@ -89,11 +132,54 @@ export function registerGitIntegration(context: vscode.ExtensionContext) {
 
             if (inputBox) {
               const currentMessage = inputBox.value;
-
-              // Only append if the message doesn't already contain the worklog
-              if (!currentMessage.includes(worklog)) {
-                inputBox.value =
-                  currentMessage + (currentMessage ? "\n\n" : "") + "---\n" + worklog;
+              
+              // Check if this is a commit message format
+              if (worklog.includes("COMMIT MESSAGE:") && worklog.includes("COMMIT DESCRIPTION:")) {
+                // Extract just the first line for the commit message
+                const lines = worklog.split('\n');
+                let commitMessage = '';
+                let commitDescription = '';
+                
+                // Find the commit message (first non-empty line after "COMMIT MESSAGE:")
+                let foundCommitMessage = false;
+                let foundDescription = false;
+                
+                for (const line of lines) {
+                  if (!foundCommitMessage && line.includes("COMMIT MESSAGE:")) {
+                    foundCommitMessage = true;
+                    continue;
+                  }
+                  
+                  if (foundCommitMessage && !foundDescription && line.trim()) {
+                    commitMessage = line.trim();
+                    foundCommitMessage = false;
+                    foundDescription = true;
+                    continue;
+                  }
+                  
+                  if (foundDescription && line.includes("COMMIT DESCRIPTION:")) {
+                    continue;
+                  }
+                  
+                  if (foundDescription && line.trim()) {
+                    commitDescription += line + '\n';
+                  }
+                }
+                
+                // Set the commit message in the SCM input box
+                if (commitMessage) {
+                  inputBox.value = commitMessage + '\n\n' + commitDescription;
+                } else {
+                  // Fallback to using the whole worklog if parsing fails
+                  inputBox.value = currentMessage + (currentMessage ? "\n\n" : "") + "---\n" + worklog;
+                }
+              } else {
+                // For regular worklogs, just append
+                // Only append if the message doesn't already contain the worklog
+                if (!currentMessage.includes(worklog)) {
+                  inputBox.value =
+                    currentMessage + (currentMessage ? "\n\n" : "") + "---\n" + worklog;
+                }
               }
             }
           }

@@ -18,7 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register commands
   context.subscriptions.push(
-    vscode.commands.registerCommand("vscode-worklog.generateWorklog", async () => {
+    vscode.commands.registerCommand("worklog-ai.generateWorklog", async () => {
       try {
         // Get LLM provider choice
         const defaultLlmProvider = vscode.workspace
@@ -256,36 +256,42 @@ export function activate(context: vscode.ExtensionContext) {
   // Register TreeView commands
   context.subscriptions.push(
     vscode.commands.registerCommand(
-      "vscode-worklog.selectLlmProvider",
+      "worklog-ai.selectLlmProvider",
       (treeView: WorklogTreeDataProvider) => {
         treeView.selectLlmProvider();
       }
     ),
     vscode.commands.registerCommand(
-      "vscode-worklog.selectWorklogStyle",
+      "worklog-ai.selectWorklogStyle",
       (treeView: WorklogTreeDataProvider) => {
         treeView.selectWorklogStyle();
       }
     ),
     vscode.commands.registerCommand(
-      "vscode-worklog.generateWorklogFromCurrentChanges",
+      "worklog-ai.generateCommitMessage",
+      (treeView: WorklogTreeDataProvider) => {
+        treeView.generateCommitMessage();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "worklog-ai.generateWorklogFromCurrentChanges",
       (treeView: WorklogTreeDataProvider) => {
         treeView.generateFromCurrentChanges();
       }
     ),
     vscode.commands.registerCommand(
-      "vscode-worklog.generateWorklogFromCommit",
+      "worklog-ai.generateWorklogFromCommit",
       (treeView: WorklogTreeDataProvider) => {
         treeView.generateFromCommit();
       }
     ),
-    vscode.commands.registerCommand("vscode-worklog.viewWorklog", (worklog: string) => {
+    vscode.commands.registerCommand("worklog-ai.viewWorklog", (worklog: string) => {
       WorklogPanel.createOrShow(context.extensionUri, worklog);
     }),
-    vscode.commands.registerCommand("vscode-worklog.refreshView", () => {
+    vscode.commands.registerCommand("worklog-ai.refreshView", () => {
       worklogTreeDataProvider.refresh();
     }),
-    vscode.commands.registerCommand("vscode-worklog.exportWorklog", async (worklog: string) => {
+    vscode.commands.registerCommand("worklog-ai.exportWorklog", async (worklog: string) => {
       // Show save dialog
       const saveUri = await vscode.window.showSaveDialog({
         defaultUri: vscode.Uri.file("worklog.md"),
@@ -305,13 +311,13 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
     }),
-    vscode.commands.registerCommand("vscode-worklog.copyWorklog", async (worklog: string) => {
+    vscode.commands.registerCommand("worklog-ai.copyWorklog", async (worklog: string) => {
       if (worklog) {
         await vscode.env.clipboard.writeText(worklog);
         vscode.window.showInformationMessage("Worklog copied to clipboard!");
       }
     }),
-    vscode.commands.registerCommand("vscode-worklog.openSettings", () => {
+    vscode.commands.registerCommand("worklog-ai.openSettings", () => {
       vscode.commands.executeCommand("workbench.action.openSettings", "worklogGenerator");
     }),
     vscode.commands.registerCommand(
