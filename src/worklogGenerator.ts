@@ -61,6 +61,11 @@ export async function generateCommitMessage(
       
       // If the message starts with "Commit Message:" or similar, remove it
       message = message.replace(/^(Commit Message|Message|Title|Subject): ?/i, '');
+      
+      // Validate message length
+      if (message.length > 100) {
+        message = message.substring(0, 97) + '...';
+      }
     }
 
     // Extract the description (remaining lines)

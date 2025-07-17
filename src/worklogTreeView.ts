@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { generateWorklog } from "./worklogGenerator";
+import { generateWorklog, generateCommitMessage } from "./worklogGenerator";
 import {
   getGitChanges,
   getSelectedCommit,
@@ -872,9 +872,6 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
             }
 
             progress.report({ increment: 30, message: "Processing with AI..." });
-
-            // Import the generateCommitMessage function
-            const { generateCommitMessage } = require("./worklogGenerator");
             
             const result = await generateCommitMessage(
               changes,
