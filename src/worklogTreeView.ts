@@ -8,6 +8,7 @@ import {
   getCurrentBranch,
 } from "./gitUtils";
 import { WorklogPanel } from "./worklogPanel";
+import { findPRTemplates, fillPRTemplate, fillPRTemplateFromCommits, PRTemplateInfo } from "./prTemplateService";
 
 export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<WorklogItem | undefined | null | void> =
@@ -357,6 +358,36 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       );
       generateFromCommitItem.iconPath = new vscode.ThemeIcon("play-circle");
       items.push(generateFromCommitItem);
+
+      // Generate PR Template - styled as button
+      const generatePRTemplateItem = new WorklogItem(
+        "📋 Fill PR Template",
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: "worklog-ai.generatePRTemplate",
+          title: "Fill PR Template",
+          arguments: [this],
+        },
+        "generatePRTemplateButton",
+        "From uncommitted changes"
+      );
+      generatePRTemplateItem.iconPath = new vscode.ThemeIcon("git-pull-request");
+      items.push(generatePRTemplateItem);
+
+      // Generate PR Template from Commits - styled as button
+      const generatePRFromCommitsItem = new WorklogItem(
+        "📋 Fill PR from Commits",
+        vscode.TreeItemCollapsibleState.None,
+        {
+          command: "worklog-ai.generatePRFromCommits",
+          title: "Fill PR Template from Commits",
+          arguments: [this],
+        },
+        "generatePRFromCommitsButton",
+        "Select multiple commits"
+      );
+      generatePRFromCommitsItem.iconPath = new vscode.ThemeIcon("git-pull-request-create");
+      items.push(generatePRFromCommitsItem);
     }
 
     // Show user commits for selected branch
@@ -971,6 +1002,247 @@ ${result.description}
             this.refresh();
             vscode.window.showErrorMessage(
               `❌ Error generating commit message: ${
+                error instanceof Error ? error.message : String(error)
+              }`
+            );
+          }
+        }
+      );
+    } catch (error) {
+      this.isGenerating = false;
+      this.refresh();
+      vscode.window.showErrorMessage(
+        `❌ Error: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  async generatePRTemplate(): Promise<void> {
+    if (this.isGenerating) {
+      vscode.window.showWarningMessage("⏳ Already generating, please wait...");
+      return;
+    }
+
+    try {
+      // Force refresh the LLM provider setting
+      this.llmProvider = vscode.workspace
+        .getConfiguration("worklogGenerator")
+        .get("defaultLlmProvider", "gemini");
+        
+      this.isGenerating = true;
+      this.refresh();
+
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: "📋 Generating PR template",
+          cancellable: true,
+        },
+        async (progress) => {
+          try {
+            progress.report({ increment: 0, message: "Finding PR templates..." });
+
+            const templates = await findPRTemplates();
+            if (templates.length === 0) {
+              vscode.window.showInformationMessage("📋 No PR templates found in .github/ directory.");
+              this.isGenerating = false;
+              this.refresh();
+              return;
+            }
+
+            progress.report({ increment: 20, message: "Analyzing git changes..." });
+
+            const changes = await getGitChanges();
+            if (!changes || changes.trim() === "") {
+              vscode.window.showInformationMessage("📝 No changes detected to fill PR template.");
+              this.isGenerating = false;
+              this.refresh();
+              return;
+            }
+
+            progress.report({ increment: 40, message: "Generating worklog content..." });
+
+            const worklogContent = await generateWorklog(changes, this.llmProvider, "business");
+
+            progress.report({ increment: 70, message: "Filling PR template..." });
+
+            let selectedTemplate = templates[0];
+            if (templates.length > 1) {
+              const templateItems = templates.map(t => ({
+                label: t.name,
+                description: t.path,
+                template: t
+              }));
+
+              const selected = await vscode.window.showQuickPick(templateItems, {
+                placeHolder: "Select PR template to fill"
+              });
+
+              if (!selected) {
+                this.isGenerating = false;
+                this.refresh();
+                return;
+              }
+              selectedTemplate = selected.template;
+            }
+
+            const filledTemplate = await fillPRTemplate(selectedTemplate, changes, worklogContent);
+
+            progress.report({ increment: 100, message: "Complete!" });
+
+            this.isGenerating = false;
+            this.refresh();
+
+            // Show the filled template in the WorklogPanel
+            WorklogPanel.createOrShow(this.context.extensionUri, filledTemplate);
+
+            vscode.window.showInformationMessage("✅ PR template filled and opened in details panel");
+
+          } catch (error) {
+            this.isGenerating = false;
+            this.refresh();
+            vscode.window.showErrorMessage(
+              `❌ Error generating PR template: ${
+                error instanceof Error ? error.message : String(error)
+              }`
+            );
+          }
+        }
+      );
+    } catch (error) {
+      this.isGenerating = false;
+      this.refresh();
+      vscode.window.showErrorMessage(
+        `❌ Error: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  async generatePRFromCommits(): Promise<void> {
+    if (this.isGenerating) {
+      vscode.window.showWarningMessage("⏳ Already generating, please wait...");
+      return;
+    }
+
+    try {
+      // Force refresh the LLM provider setting
+      this.llmProvider = vscode.workspace
+        .getConfiguration("worklogGenerator")
+        .get("defaultLlmProvider", "gemini");
+
+      this.isGenerating = true;
+      this.refresh();
+
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: "📋 Generating PR template from commits",
+          cancellable: true,
+        },
+        async (progress) => {
+          try {
+            progress.report({ increment: 0, message: "Finding PR templates..." });
+
+            const templates = await findPRTemplates();
+            if (templates.length === 0) {
+              vscode.window.showInformationMessage("📋 No PR templates found in .github/ directory.");
+              this.isGenerating = false;
+              this.refresh();
+              return;
+            }
+
+            progress.report({ increment: 10, message: "Loading commits..." });
+
+            // Get user commits for selection
+            await this.loadUserCommits();
+            if (this.userCommits.length === 0) {
+              vscode.window.showInformationMessage("📝 No commits found for selection.");
+              this.isGenerating = false;
+              this.refresh();
+              return;
+            }
+
+            progress.report({ increment: 20, message: "Selecting commits..." });
+
+            // Show commit selection dialog
+            const commitItems = this.userCommits.map(commit => ({
+              label: `${commit.hash.substring(0, 8)} - ${commit.message}`,
+              description: `${commit.author} • ${commit.date}`,
+              picked: false,
+              commit: commit
+            }));
+
+            const selectedItems = await vscode.window.showQuickPick(commitItems, {
+              canPickMany: true,
+              placeHolder: "Select commits to include in PR template"
+            });
+
+            if (!selectedItems || selectedItems.length === 0) {
+              this.isGenerating = false;
+              this.refresh();
+              return;
+            }
+
+            const selectedCommits = selectedItems.map(item => item.commit);
+
+            progress.report({ increment: 40, message: "Generating worklog content..." });
+
+            // Generate combined changes from selected commits
+            const commitChanges = await Promise.all(
+              selectedCommits.map(async (commit) => {
+                try {
+                  const changes = await getSelectedCommit(commit.hash);
+                  return `Commit: ${commit.hash}\nMessage: ${commit.message}\nChanges:\n${changes}`;
+                } catch (error) {
+                  return `Commit: ${commit.hash}\nMessage: ${commit.message}\nChanges: Unable to fetch changes`;
+                }
+              })
+            );
+
+            const combinedChanges = commitChanges.join('\n\n---\n\n');
+            const worklogContent = await generateWorklog(combinedChanges, this.llmProvider, "business");
+
+            progress.report({ increment: 70, message: "Filling PR template..." });
+
+            let selectedTemplate = templates[0];
+            if (templates.length > 1) {
+              const templateItems = templates.map(t => ({
+                label: t.name,
+                description: t.path,
+                template: t
+              }));
+
+              const selected = await vscode.window.showQuickPick(templateItems, {
+                placeHolder: "Select PR template to fill"
+              });
+
+              if (!selected) {
+                this.isGenerating = false;
+                this.refresh();
+                return;
+              }
+              selectedTemplate = selected.template;
+            }
+
+            const filledTemplate = await fillPRTemplateFromCommits(selectedTemplate, selectedCommits, worklogContent);
+
+            progress.report({ increment: 100, message: "Complete!" });
+
+            this.isGenerating = false;
+            this.refresh();
+
+            // Show the filled template in the WorklogPanel
+            WorklogPanel.createOrShow(this.context.extensionUri, filledTemplate);
+
+            vscode.window.showInformationMessage(
+              `✅ PR template filled with ${selectedCommits.length} commits and opened in details panel`
+            );
+
+          } catch (error) {
+            this.isGenerating = false;
+            this.refresh();
+            vscode.window.showErrorMessage(
+              `❌ Error generating PR template: ${
                 error instanceof Error ? error.message : String(error)
               }`
             );
