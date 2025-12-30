@@ -6,13 +6,14 @@
 
 Generate professional worklogs instantly from your code changes using AI.
 
-## What's New in v0.2.2
+## What's New in v0.3.1
 
-- **New Feature**: Generate commit messages and descriptions from code changes
-- Added "Generate Commit Message" button to the sidebar
-- Specialized AI prompt for creating concise, imperative-style commit messages
-- Options to copy just the message or both message and description
-- Fixed the generate commit button view
+- **New Feature**: Auto-fill GitHub PR templates from `.github/*.md` files
+- Generate PR descriptions from uncommitted changes or selected commits
+- Multi-commit selection with manual picker for comprehensive PR descriptions
+- Smart template filling with AI-generated content and auto-detected change types
+- Dynamic model selection for Gemini and OpenAI with real-time API discovery
+- Enhanced commit message generation with automatic details window
 
 [See full changelog](https://github.com/Prompt-To-Product/worklog-ai/blob/main/CHANGELOG.md)
 
@@ -32,13 +33,16 @@ The extension leverages advanced AI models (Google Gemini or OpenAI) to understa
 
 - **AI-Powered Analysis**: Intelligent parsing of code changes to identify meaningful modifications
 - **Multiple AI Providers**:
-  - **Google Gemini**: Fast and efficient AI model for most use cases
-  - **OpenAI**: Advanced reasoning capabilities for complex code analysis
+  - **Google Gemini**: Fast and efficient AI model with dynamic model selection
+  - **OpenAI**: Advanced reasoning capabilities with real-time model discovery
   - **Local LLM**: Use your own locally hosted LLM for privacy and customization ([setup guide](LOCAL_LLM_SETUP.md))
 - **Multiple Worklog Styles**:
   - **Technical Style**: Detailed implementation specifics for developer handoffs
   - **Business Style**: Business impact with minimal technical jargon for stakeholder reports
+- **PR Template Auto-Fill**: Automatically fill GitHub PR templates from `.github/*.md` files with AI-generated content
+- **Multi-Commit Selection**: Generate comprehensive PR descriptions from manually selected commits
 - **Flexible Source Options**: Generate from current uncommitted changes or select specific commits
+- **Dynamic Model Selection**: Real-time fetching of available models from Gemini and OpenAI APIs
 - **Customizable Settings**: Configure default AI provider, worklog style, and automation options
 - **Direct Integration**: Access directly from the VS Code sidebar or Source Control view
 
@@ -49,6 +53,10 @@ The extension leverages advanced AI models (Google Gemini or OpenAI) to understa
 | ✨ **Generate New Worklog**                    | Open the worklog generation wizard                      |
 | ✨ **Create Worklog from Uncommitted Changes** | Generate a worklog based on current uncommitted changes |
 | 📝 **Create Worklog from Commit History**      | Select a specific commit to generate a worklog          |
+| 📋 **Fill PR Template**                        | Auto-fill GitHub PR templates from uncommitted changes  |
+| 📋 **Fill PR from Commits**                    | Fill PR templates from manually selected commits        |
+| 🤖 **Select Gemini Model**                     | Choose from available Gemini models                     |
+| 🤖 **Select OpenAI Model**                     | Choose from available OpenAI models                     |
 | 📤 **Save Worklog to File**                    | Export the generated worklog to a file                  |
 | 📋 **Copy Worklog to Clipboard**               | Copy the generated worklog to clipboard                 |
 | 🔄 **Refresh Worklog Panel**                   | Refresh the worklog panel                               |

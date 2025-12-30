@@ -406,6 +406,18 @@ export function activate(context: vscode.ExtensionContext) {
       }
     ),
     vscode.commands.registerCommand(
+      "worklog-ai.generatePRTemplate",
+      (treeView: WorklogTreeDataProvider) => {
+        treeView.generatePRTemplate();
+      }
+    ),
+    vscode.commands.registerCommand(
+      "worklog-ai.generatePRFromCommits",
+      (treeView: WorklogTreeDataProvider) => {
+        treeView.generatePRFromCommits();
+      }
+    ),
+    vscode.commands.registerCommand(
       "worklog-ai.configureGeminiApiKey",
       async (treeView: WorklogTreeDataProvider) => {
         const apiKey = await vscode.window.showInputBox({

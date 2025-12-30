@@ -5,6 +5,19 @@ All notable changes to the "Worklog AI" extension will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2025-12-30
+
+### Added
+- **PR Template Auto-Fill**: Automatically fill GitHub PR templates from `.github/*.md` files
+- Two PR generation modes: from uncommitted changes or selected commits
+- Multi-commit selection with manual commit picker
+- Smart template filling with AI-generated descriptions and auto-detected change types
+- Support for multiple PR template files with selection dialog
+
+### Fixed
+- Fixed LLM provider configuration not being respected in PR template generation
+- Corrected parameter order in worklog generation calls for PR templates
+
 ## [0.3.0] - 2025-12-30
 
 ### Added
