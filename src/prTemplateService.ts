@@ -140,11 +140,12 @@ function extractCommitMessages(changes: string): string[] {
   const lines = changes.split('\n');
   const commits: string[] = [];
   
-  for (const line of lines) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     if (line.startsWith('commit ')) {
-      const nextLineIndex = lines.indexOf(line) + 4; // Skip commit hash, author, date
-      if (nextLineIndex < lines.length) {
-        const commitMsg = lines[nextLineIndex]?.trim();
+      const msgLineIndex = i + 4; // Skip commit hash, author, date
+      if (msgLineIndex < lines.length) {
+        const commitMsg = lines[msgLineIndex]?.trim();
         if (commitMsg) {
           commits.push(commitMsg);
         }
