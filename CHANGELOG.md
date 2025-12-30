@@ -5,6 +5,26 @@ All notable changes to the "Worklog AI" extension will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-12-30
+
+### Added
+- **Dynamic Model Selection**: Automatically fetch and display available models from Gemini and OpenAI APIs
+- New model selection UI in sidebar for both Gemini and OpenAI providers
+- Configuration settings for selected models (`selectedGeminiModel`, `selectedOpenAIModel`)
+- Commands for model selection: "Select Gemini Model" and "Select OpenAI Model"
+- Graceful fallback to default models when API calls fail
+
+### Changed
+- **Improved Commit Message UX**: Commit messages now automatically open in details window instead of notification
+- Enhanced commit message display with structured markdown formatting
+- Streamlined copy options for generated commit messages
+- Local LLM configuration remains unchanged for compatibility
+
+### Technical
+- Added `modelService.ts` for centralized model management
+- Updated API calls to use dynamic model parameters
+- Enhanced error handling for model fetching
+
 ## [0.2.2] - 2025-07-17
 
 ### Fixed

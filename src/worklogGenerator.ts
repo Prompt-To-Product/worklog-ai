@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import axios from "axios";
+import { getSelectedModel } from "./modelService";
 
 /**
  * Generate a commit message and description based on code changes
@@ -42,9 +43,11 @@ export async function generateCommitMessage(
     // Call the appropriate LLM API
     let response: string;
     if (llmProvider === "gemini") {
-      response = await callGeminiApi(prompt, geminiApiKey);
+      const selectedModel = getSelectedModel("gemini");
+      response = await callGeminiApi(prompt, geminiApiKey, selectedModel);
     } else if (llmProvider === "openai") {
-      response = await callOpenAiApi(prompt, openaiApiKey);
+      const selectedModel = getSelectedModel("openai");
+      response = await callOpenAiApi(prompt, openaiApiKey, selectedModel);
     } else {
       response = await callLocalLlmApi(prompt, localLlmBaseUrl, localLlmModelName);
     }
@@ -147,9 +150,11 @@ export async function generateWorklog(
 
     // Call the appropriate LLM API
     if (llmProvider === "gemini") {
-      return await callGeminiApi(prompt, geminiApiKey);
+      const selectedModel = getSelectedModel("gemini");
+      return await callGeminiApi(prompt, geminiApiKey, selectedModel);
     } else if (llmProvider === "openai") {
-      return await callOpenAiApi(prompt, openaiApiKey);
+      const selectedModel = getSelectedModel("openai");
+      return await callOpenAiApi(prompt, openaiApiKey, selectedModel);
     } else {
       return await callLocalLlmApi(prompt, localLlmBaseUrl, localLlmModelName);
     }
@@ -305,10 +310,10 @@ Generate the worklog and DSU script now:
 /**
  * Call the Gemini API to generate a worklog
  */
-async function callGeminiApi(prompt: string, apiKey: string): Promise<string> {
+async function callGeminiApi(prompt: string, apiKey: string, model: string = "gemini-2.0-flash"): Promise<string> {
   try {
     const response = await axios.post(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
         contents: [
           {
@@ -351,12 +356,12 @@ async function callGeminiApi(prompt: string, apiKey: string): Promise<string> {
 /**
  * Call the OpenAI API to generate a worklog
  */
-async function callOpenAiApi(prompt: string, apiKey: string): Promise<string> {
+async function callOpenAiApi(prompt: string, apiKey: string, model: string = "gpt-4o"): Promise<string> {
   try {
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
-        model: "gpt-4o",
+        model: model,
         messages: [
           {
             role: "system",

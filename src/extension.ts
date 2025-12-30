@@ -452,6 +452,74 @@ export function activate(context: vscode.ExtensionContext) {
           vscode.window.showInformationMessage(`✅ OpenAI API key updated successfully`);
         }
       }
+    ),
+    vscode.commands.registerCommand(
+      "worklog-ai.selectGeminiModel",
+      async (treeView: WorklogTreeDataProvider) => {
+        try {
+          const { fetchGeminiModels, setSelectedModel } = await import("./modelService");
+          const config = vscode.workspace.getConfiguration("worklogGenerator");
+          const apiKey = config.get("geminiApiKey", "");
+          
+          if (!apiKey) {
+            vscode.window.showErrorMessage("Please configure Gemini API key first");
+            return;
+          }
+
+          const models = await fetchGeminiModels(apiKey);
+          const items = models.map(model => ({
+            label: model.name,
+            description: model.id,
+            value: model.id
+          }));
+
+          const selected = await vscode.window.showQuickPick(items, {
+            placeHolder: "Select Gemini model"
+          });
+
+          if (selected) {
+            await setSelectedModel("gemini", selected.value);
+            treeView.refresh();
+            vscode.window.showInformationMessage(`✅ Selected Gemini model: ${selected.label}`);
+          }
+        } catch (error) {
+          vscode.window.showErrorMessage(`Failed to fetch Gemini models: ${error}`);
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      "worklog-ai.selectOpenAIModel", 
+      async (treeView: WorklogTreeDataProvider) => {
+        try {
+          const { fetchOpenAIModels, setSelectedModel } = await import("./modelService");
+          const config = vscode.workspace.getConfiguration("worklogGenerator");
+          const apiKey = config.get("openaiApiKey", "");
+          
+          if (!apiKey) {
+            vscode.window.showErrorMessage("Please configure OpenAI API key first");
+            return;
+          }
+
+          const models = await fetchOpenAIModels(apiKey);
+          const items = models.map(model => ({
+            label: model.name,
+            description: model.id,
+            value: model.id
+          }));
+
+          const selected = await vscode.window.showQuickPick(items, {
+            placeHolder: "Select OpenAI model"
+          });
+
+          if (selected) {
+            await setSelectedModel("openai", selected.value);
+            treeView.refresh();
+            vscode.window.showInformationMessage(`✅ Selected OpenAI model: ${selected.label}`);
+          }
+        } catch (error) {
+          vscode.window.showErrorMessage(`Failed to fetch OpenAI models: ${error}`);
+        }
+      }
     )
   );
 }
