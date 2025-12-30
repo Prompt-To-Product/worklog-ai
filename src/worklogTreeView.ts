@@ -193,6 +193,27 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       );
       apiKeyItem.iconPath = new vscode.ThemeIcon("key");
       items.push(apiKeyItem);
+
+      // Add model selection for Gemini
+      if (geminiApiKey) {
+        const selectedModel = vscode.workspace
+          .getConfiguration("worklogGenerator")
+          .get("selectedGeminiModel", "gemini-2.0-flash");
+          
+        const modelItem = new WorklogItem(
+          "🤖 Gemini Model",
+          vscode.TreeItemCollapsibleState.None,
+          {
+            command: "worklog-ai.selectGeminiModel",
+            title: "Select Gemini Model",
+            arguments: [this],
+          },
+          "selectedGeminiModel",
+          selectedModel
+        );
+        modelItem.iconPath = new vscode.ThemeIcon("robot");
+        items.push(modelItem);
+      }
     } else if (this.llmProvider === "openai") {
       const openaiApiKey = vscode.workspace
         .getConfiguration("worklogGenerator")
@@ -211,6 +232,27 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       );
       apiKeyItem.iconPath = new vscode.ThemeIcon("key");
       items.push(apiKeyItem);
+
+      // Add model selection for OpenAI
+      if (openaiApiKey) {
+        const selectedModel = vscode.workspace
+          .getConfiguration("worklogGenerator")
+          .get("selectedOpenAIModel", "gpt-4o");
+          
+        const modelItem = new WorklogItem(
+          "🤖 OpenAI Model",
+          vscode.TreeItemCollapsibleState.None,
+          {
+            command: "worklog-ai.selectOpenAIModel",
+            title: "Select OpenAI Model",
+            arguments: [this],
+          },
+          "selectedOpenAIModel",
+          selectedModel
+        );
+        modelItem.iconPath = new vscode.ThemeIcon("robot");
+        items.push(modelItem);
+      }
     } else if (this.llmProvider === "local") {
       const localLlmBaseUrl = vscode.workspace
         .getConfiguration("worklogGenerator")
@@ -878,42 +920,51 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
               this.llmProvider
             );
 
-            progress.report({ increment: 80, message: "Finalizing commit message..." });
+            progress.report({ increment: 100, message: "Complete!" });
 
             // Stop the loader before showing the result
             this.isGenerating = false;
             this.refresh();
 
-            progress.report({ increment: 100, message: "Complete!" });
+            // Format the commit message for display
+            const formattedResult = `# Generated Commit Message
 
-            // Show the commit message in a dialog with options to copy
-            const formattedResult = `${result.message}\n\n${result.description}`;
-            
+## Commit Message
+\`\`\`
+${result.message}
+\`\`\`
+
+## Description
+${result.description}
+
+---
+
+**Actions:**
+- Copy the commit message above to use in your git commit
+- You can also copy both message and description together
+`;
+
             // Store the commit message in extension context
             this.context.workspaceState.update("lastGeneratedCommitMessage", result.message);
             this.context.workspaceState.update("lastGeneratedCommitDescription", result.description);
 
-            // Show the result in a dialog with options
+            // Automatically open the details window
+            WorklogPanel.createOrShow(this.context.extensionUri, formattedResult);
+
+            // Show a brief success notification with copy options
             const action = await vscode.window.showInformationMessage(
-              `✅ Commit message generated:\n\n${result.message}`,
+              "✅ Commit message generated and opened in details panel",
               "📋 Copy Message",
-              "📋 Copy All",
-              "📝 View Details"
+              "📋 Copy All"
             );
 
             if (action === "📋 Copy Message") {
               await vscode.env.clipboard.writeText(result.message);
               vscode.window.showInformationMessage("📋 Commit message copied to clipboard!");
             } else if (action === "📋 Copy All") {
-              await vscode.env.clipboard.writeText(formattedResult);
+              const fullContent = `${result.message}\n\n${result.description}`;
+              await vscode.env.clipboard.writeText(fullContent);
               vscode.window.showInformationMessage("📋 Commit message and description copied to clipboard!");
-            } else if (action === "📝 View Details") {
-              // Show the full commit message and description in a new editor
-              const doc = await vscode.workspace.openTextDocument({
-                content: `# Commit Message\n\n${result.message}\n\n# Description\n\n${result.description}`,
-                language: "markdown"
-              });
-              await vscode.window.showTextDocument(doc);
             }
           } catch (error) {
             this.isGenerating = false;
