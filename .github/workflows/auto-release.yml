@@ -1,8 +1,10 @@
-name: Auto Release Draft
+name: Auto Release
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'package.json'  # Only trigger when version changes
   pull_request:
     types: [closed]
 
@@ -18,9 +20,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Update Release Draft
+      - name: Create Release
         uses: release-drafter/release-drafter@v5
         with:
-          publish: false
+          publish: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
