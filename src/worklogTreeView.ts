@@ -9,6 +9,7 @@ import {
 } from "./gitUtils";
 import { WorklogPanel } from "./worklogPanel";
 import { findPRTemplates, fillPRTemplate, fillPRTemplateFromCommits, PRTemplateInfo } from "./prTemplateService";
+import ConfigService from "./configService";
 
 export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogItem> {
   private _onDidChangeTreeData: vscode.EventEmitter<WorklogItem | undefined | null | void> =
@@ -24,25 +25,17 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
   private userCommits: any[] = [];
 
   constructor(private context: vscode.ExtensionContext) {
-    this.llmProvider = vscode.workspace
-      .getConfiguration("worklogGenerator")
-      .get("defaultLlmProvider", "gemini");
-    this.worklogStyle = vscode.workspace
-      .getConfiguration("worklogGenerator")
-      .get("defaultWorklogStyle", "business");
+    this.llmProvider = ConfigService.getDefaultLlmProvider();
+    this.worklogStyle = ConfigService.getDefaultWorklogStyle();
 
     // Initialize with current branch
     this.initializeBranch();
 
     // Listen for configuration changes
     vscode.workspace.onDidChangeConfiguration((e) => {
-      if (e.affectsConfiguration("worklogGenerator")) {
-        this.llmProvider = vscode.workspace
-          .getConfiguration("worklogGenerator")
-          .get("defaultLlmProvider", "gemini");
-        this.worklogStyle = vscode.workspace
-          .getConfiguration("worklogGenerator")
-          .get("defaultWorklogStyle", "business");
+      if (ConfigService.affectsConfiguration(e)) {
+        this.llmProvider = ConfigService.getDefaultLlmProvider();
+        this.worklogStyle = ConfigService.getDefaultWorklogStyle();
         this.refresh();
       }
     });
@@ -199,10 +192,10 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       if (geminiApiKey) {
         const selectedModel = vscode.workspace
           .getConfiguration("worklogGenerator")
-          .get("selectedGeminiModel", "gemini-2.0-flash");
-          
+          .get("selectedGeminiModel", "");
+
         const modelItem = new WorklogItem(
-          "🤖 Gemini Model",
+          selectedModel ? `🤖 Model: ${selectedModel}` : "🤖 Select Model",
           vscode.TreeItemCollapsibleState.None,
           {
             command: "worklog-ai.selectGeminiModel",
@@ -210,7 +203,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
             arguments: [this],
           },
           "selectedGeminiModel",
-          selectedModel
+          selectedModel ? "Click to change" : "No model selected"
         );
         modelItem.iconPath = new vscode.ThemeIcon("robot");
         items.push(modelItem);
@@ -238,10 +231,10 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
       if (openaiApiKey) {
         const selectedModel = vscode.workspace
           .getConfiguration("worklogGenerator")
-          .get("selectedOpenAIModel", "gpt-4o");
-          
+          .get("selectedOpenAIModel", "");
+
         const modelItem = new WorklogItem(
-          "🤖 OpenAI Model",
+          selectedModel ? `🤖 Model: ${selectedModel}` : "🤖 Select Model",
           vscode.TreeItemCollapsibleState.None,
           {
             command: "worklog-ai.selectOpenAIModel",
@@ -249,7 +242,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
             arguments: [this],
           },
           "selectedOpenAIModel",
-          selectedModel
+          selectedModel ? "Click to change" : "No model selected"
         );
         modelItem.iconPath = new vscode.ThemeIcon("robot");
         items.push(modelItem);
@@ -300,7 +293,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
 
     // Current branch selector
     const branchItem = new WorklogItem(
-      "📍 Current Branch",
+      "📍 Branch",
       vscode.TreeItemCollapsibleState.None,
       {
         command: "worklog-ai.selectBranch",
@@ -308,7 +301,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         arguments: [this],
       },
       "branchSelector",
-      this.selectedBranch || "No branch selected"
+      this.selectedBranch || "Not selected"
     );
     branchItem.iconPath = new vscode.ThemeIcon("git-branch");
     items.push(branchItem);
@@ -316,7 +309,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
     // Generate from current changes - styled as button
     if (!this.isGenerating) {
       const generateFromCurrentItem = new WorklogItem(
-        "🚀 Generate from Current Changes",
+        "🚀 Worklog from Changes",
         vscode.TreeItemCollapsibleState.None,
         {
           command: "worklog-ai.generateWorklogFromCurrentChanges",
@@ -331,7 +324,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
 
       // Generate commit message - styled as button
       const generateCommitMessageItem = new WorklogItem(
-        "📝 Generate Commit Message",
+        "📝 Commit Message",
         vscode.TreeItemCollapsibleState.None,
         {
           command: "worklog-ai.generateCommitMessage",
@@ -339,14 +332,14 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
           arguments: [this],
         },
         "generateCommitMessageButton",
-        "From uncommitted changes"
+        "Auto-generate from changes"
       );
       generateCommitMessageItem.iconPath = new vscode.ThemeIcon("git-commit");
       items.push(generateCommitMessageItem);
 
       // Generate from commit - styled as button
       const generateFromCommitItem = new WorklogItem(
-        "📝 Generate from Commit",
+        "📜 Worklog from Commit",
         vscode.TreeItemCollapsibleState.None,
         {
           command: "worklog-ai.showCommitSelector",
@@ -354,22 +347,22 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
           arguments: [this],
         },
         "generateCommitButton",
-        "Select branch and commit"
+        "Pick a commit"
       );
-      generateFromCommitItem.iconPath = new vscode.ThemeIcon("play-circle");
+      generateFromCommitItem.iconPath = new vscode.ThemeIcon("history");
       items.push(generateFromCommitItem);
 
       // Generate PR Template - styled as button
       const generatePRTemplateItem = new WorklogItem(
-        "📋 Fill PR Template",
+        "📋 Fill PR Form",
         vscode.TreeItemCollapsibleState.None,
         {
           command: "worklog-ai.generatePRTemplate",
-          title: "Fill PR Template",
+          title: "Fill PR Form",
           arguments: [this],
         },
         "generatePRTemplateButton",
-        "From uncommitted changes"
+        "Auto-fill PR template from changes"
       );
       generatePRTemplateItem.iconPath = new vscode.ThemeIcon("git-pull-request");
       items.push(generatePRTemplateItem);
@@ -380,11 +373,11 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         vscode.TreeItemCollapsibleState.None,
         {
           command: "worklog-ai.generatePRFromCommits",
-          title: "Fill PR Template from Commits",
+          title: "Fill PR from Commits",
           arguments: [this],
         },
         "generatePRFromCommitsButton",
-        "Select multiple commits"
+        "Auto-fill PR template from commits"
       );
       generatePRFromCommitsItem.iconPath = new vscode.ThemeIcon("git-pull-request-create");
       items.push(generatePRFromCommitsItem);
@@ -394,7 +387,7 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
     if (this.selectedBranch) {
       if (this.userCommits.length > 0) {
         const commitsSection = new WorklogItem(
-          `📚 Your Recent Commits (${this.userCommits.length})`,
+          `📚 Recent Commits (${this.userCommits.length})`,
           vscode.TreeItemCollapsibleState.Collapsed,
           undefined,
           "commitsSection"
@@ -402,11 +395,11 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
         items.push(commitsSection);
       } else {
         const noCommitsItem = new WorklogItem(
-          "📭 No commits found",
+          "📭 No commits",
           vscode.TreeItemCollapsibleState.None,
           undefined,
           "noCommits",
-          `No commits by you on branch '${this.selectedBranch}'`
+          `No commits on '${this.selectedBranch}'`
         );
         noCommitsItem.iconPath = new vscode.ThemeIcon("info");
         items.push(noCommitsItem);
@@ -529,24 +522,31 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
   }
 
   async selectLlmProvider(): Promise<void> {
+    // Get currently selected models for each provider
+    const geminiModel = ConfigService.getSelectedGeminiModel();
+    const openaiModel = ConfigService.getSelectedOpenAIModel();
+    const localModel = ConfigService.getLocalLlmModelName();
+    const geminiApiKey = ConfigService.getGeminiApiKey();
+    const openaiApiKey = ConfigService.getOpenAIApiKey();
+
     const selected = await vscode.window.showQuickPick(
       [
         {
           label: "🔮 Google Gemini",
           value: "gemini",
-          description: "Fast and efficient - Uses gemini-2.0-flash model",
-          detail: "Recommended for most users",
+          description: geminiApiKey ? `Uses ${geminiModel}` : "Requires API key",
+          detail: "Fast and efficient - Recommended for most users",
         },
         {
           label: "🧠 OpenAI",
           value: "openai",
-          description: "Advanced reasoning - Uses gpt-4o model",
-          detail: "Great for complex code analysis",
+          description: openaiApiKey ? `Uses ${openaiModel}` : "Requires API key",
+          detail: "Advanced reasoning - Great for complex code analysis",
         },
         {
           label: "🏠 Local LLM",
           value: "local",
-          description: "Use your own locally hosted LLM",
+          description: `Uses ${localModel}`,
           detail: "Privacy-focused option with customizable model",
         },
       ],
@@ -980,7 +980,7 @@ ${result.description}
             this.context.workspaceState.update("lastGeneratedCommitDescription", result.description);
 
             // Automatically open the details window
-            WorklogPanel.createOrShow(this.context.extensionUri, formattedResult);
+            WorklogPanel.createOrShow(this.context.extensionUri, formattedResult, 'commit');
 
             // Show a brief success notification with copy options
             const action = await vscode.window.showInformationMessage(
@@ -1042,12 +1042,46 @@ ${result.description}
           try {
             progress.report({ increment: 0, message: "Finding PR templates..." });
 
-            const templates = await findPRTemplates();
+            let templates = await findPRTemplates();
+
+            // If no templates found, offer to paste one manually
             if (templates.length === 0) {
-              vscode.window.showInformationMessage("📋 No PR templates found in .github/ directory.");
-              this.isGenerating = false;
-              this.refresh();
-              return;
+              const action = await vscode.window.showInformationMessage(
+                "📋 No PR templates found in .github/ directory.",
+                "Paste Template",
+                "Cancel"
+              );
+
+              if (action === "Paste Template") {
+                const manualTemplate = await vscode.window.showInputBox({
+                  prompt: "Paste your PR template markdown here (multi-line supported)",
+                  placeHolder: "## Description\\n\\n<!-- Describe your changes -->\\n\\n## Type of Change\\n\\n- [ ] Bug fix\\n- [ ] New feature",
+                  ignoreFocusOut: true,
+                  validateInput: (value) => {
+                    if (!value || value.trim().length === 0) {
+                      return "Template cannot be empty";
+                    }
+                    return null;
+                  }
+                });
+
+                if (!manualTemplate) {
+                  this.isGenerating = false;
+                  this.refresh();
+                  return;
+                }
+
+                // Create a manual template object
+                templates = [{
+                  path: "manual-input",
+                  name: "Manual Template",
+                  content: manualTemplate
+                }];
+              } else {
+                this.isGenerating = false;
+                this.refresh();
+                return;
+              }
             }
 
             progress.report({ increment: 20, message: "Analyzing git changes..." });
@@ -1068,14 +1102,32 @@ ${result.description}
 
             let selectedTemplate = templates[0];
             if (templates.length > 1) {
+              // Get last selected template
+              const lastSelectedPath = vscode.workspace
+                .getConfiguration("worklogGenerator")
+                .get("lastSelectedPRTemplate", "");
+
               const templateItems = templates.map(t => ({
                 label: t.name,
                 description: t.path,
                 template: t
               }));
 
+              // Find the last selected template in current list
+              let defaultTemplate = templateItems[0];
+              if (lastSelectedPath) {
+                const lastSelected = templateItems.find(t => t.template.path === lastSelectedPath);
+                if (lastSelected) {
+                  defaultTemplate = lastSelected;
+                  // Move it to the top for visibility
+                  const index = templateItems.indexOf(lastSelected);
+                  templateItems.splice(index, 1);
+                  templateItems.unshift(defaultTemplate);
+                }
+              }
+
               const selected = await vscode.window.showQuickPick(templateItems, {
-                placeHolder: "Select PR template to fill"
+                placeHolder: "Select PR template to fill (last used shown first)"
               });
 
               if (!selected) {
@@ -1084,6 +1136,11 @@ ${result.description}
                 return;
               }
               selectedTemplate = selected.template;
+
+              // Save the selected template for next time
+              await vscode.workspace
+                .getConfiguration("worklogGenerator")
+                .update("lastSelectedPRTemplate", selectedTemplate.path, vscode.ConfigurationTarget.Global);
             }
 
             const filledTemplate = await fillPRTemplate(selectedTemplate, changes, worklogContent);
@@ -1094,7 +1151,7 @@ ${result.description}
             this.refresh();
 
             // Show the filled template in the WorklogPanel
-            WorklogPanel.createOrShow(this.context.extensionUri, filledTemplate);
+            WorklogPanel.createOrShow(this.context.extensionUri, filledTemplate, 'pr-template');
 
             vscode.window.showInformationMessage("✅ PR template filled and opened in details panel");
 
@@ -1143,12 +1200,46 @@ ${result.description}
           try {
             progress.report({ increment: 0, message: "Finding PR templates..." });
 
-            const templates = await findPRTemplates();
+            let templates = await findPRTemplates();
+
+            // If no templates found, offer to paste one manually
             if (templates.length === 0) {
-              vscode.window.showInformationMessage("📋 No PR templates found in .github/ directory.");
-              this.isGenerating = false;
-              this.refresh();
-              return;
+              const action = await vscode.window.showInformationMessage(
+                "📋 No PR templates found in .github/ directory.",
+                "Paste Template",
+                "Cancel"
+              );
+
+              if (action === "Paste Template") {
+                const manualTemplate = await vscode.window.showInputBox({
+                  prompt: "Paste your PR template markdown here (multi-line supported)",
+                  placeHolder: "## Description\\n\\n<!-- Describe your changes -->\\n\\n## Type of Change\\n\\n- [ ] Bug fix\\n- [ ] New feature",
+                  ignoreFocusOut: true,
+                  validateInput: (value) => {
+                    if (!value || value.trim().length === 0) {
+                      return "Template cannot be empty";
+                    }
+                    return null;
+                  }
+                });
+
+                if (!manualTemplate) {
+                  this.isGenerating = false;
+                  this.refresh();
+                  return;
+                }
+
+                // Create a manual template object
+                templates = [{
+                  path: "manual-input",
+                  name: "Manual Template",
+                  content: manualTemplate
+                }];
+              } else {
+                this.isGenerating = false;
+                this.refresh();
+                return;
+              }
             }
 
             progress.report({ increment: 10, message: "Loading commits..." });
@@ -1206,14 +1297,32 @@ ${result.description}
 
             let selectedTemplate = templates[0];
             if (templates.length > 1) {
+              // Get last selected template
+              const lastSelectedPath = vscode.workspace
+                .getConfiguration("worklogGenerator")
+                .get("lastSelectedPRTemplate", "");
+
               const templateItems = templates.map(t => ({
                 label: t.name,
                 description: t.path,
                 template: t
               }));
 
+              // Find the last selected template in current list
+              let defaultTemplate = templateItems[0];
+              if (lastSelectedPath) {
+                const lastSelected = templateItems.find(t => t.template.path === lastSelectedPath);
+                if (lastSelected) {
+                  defaultTemplate = lastSelected;
+                  // Move it to the top for visibility
+                  const index = templateItems.indexOf(lastSelected);
+                  templateItems.splice(index, 1);
+                  templateItems.unshift(defaultTemplate);
+                }
+              }
+
               const selected = await vscode.window.showQuickPick(templateItems, {
-                placeHolder: "Select PR template to fill"
+                placeHolder: "Select PR template to fill (last used shown first)"
               });
 
               if (!selected) {
@@ -1222,6 +1331,11 @@ ${result.description}
                 return;
               }
               selectedTemplate = selected.template;
+
+              // Save the selected template for next time
+              await vscode.workspace
+                .getConfiguration("worklogGenerator")
+                .update("lastSelectedPRTemplate", selectedTemplate.path, vscode.ConfigurationTarget.Global);
             }
 
             const filledTemplate = await fillPRTemplateFromCommits(selectedTemplate, selectedCommits, worklogContent);
@@ -1232,7 +1346,7 @@ ${result.description}
             this.refresh();
 
             // Show the filled template in the WorklogPanel
-            WorklogPanel.createOrShow(this.context.extensionUri, filledTemplate);
+            WorklogPanel.createOrShow(this.context.extensionUri, filledTemplate, 'pr-template');
 
             vscode.window.showInformationMessage(
               `✅ PR template filled with ${selectedCommits.length} commits and opened in details panel`

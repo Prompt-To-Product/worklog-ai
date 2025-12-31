@@ -2,14 +2,16 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as marked from 'marked';
+import ConfigService from './configService';
 
 export class WorklogPanel {
   public static currentPanel: WorklogPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private _disposables: vscode.Disposable[] = [];
   private _worklog: string = '';
+  private _contentType: 'worklog' | 'commit' | 'pr-template' = 'worklog';
 
-  public static createOrShow(extensionUri: vscode.Uri, worklog: string) {
+  public static createOrShow(extensionUri: vscode.Uri, worklog: string, contentType: 'worklog' | 'commit' | 'pr-template' = 'worklog') {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
@@ -17,7 +19,7 @@ export class WorklogPanel {
     // If we already have a panel, show it
     if (WorklogPanel.currentPanel) {
       WorklogPanel.currentPanel._panel.reveal(column);
-      WorklogPanel.currentPanel.update(worklog);
+      WorklogPanel.currentPanel.update(worklog, contentType);
       return;
     }
 
@@ -35,16 +37,18 @@ export class WorklogPanel {
       }
     );
 
-    WorklogPanel.currentPanel = new WorklogPanel(panel, extensionUri, worklog);
+    WorklogPanel.currentPanel = new WorklogPanel(panel, extensionUri, worklog, contentType);
   }
 
   private constructor(
     panel: vscode.WebviewPanel,
     private readonly _extensionUri: vscode.Uri,
-    worklog: string
+    worklog: string,
+    contentType: 'worklog' | 'commit' | 'pr-template' = 'worklog'
   ) {
     this._panel = panel;
     this._worklog = worklog;
+    this._contentType = contentType;
 
     // Set the webview's initial html content
     this.update(worklog);
@@ -69,7 +73,19 @@ export class WorklogPanel {
             vscode.window.showInformationMessage('🎤 DSU script copied to clipboard!');
             return;
           case 'generateNew':
-            vscode.commands.executeCommand('worklog-ai.generateWorklog');
+            // Execute the appropriate command based on content type
+            switch (this._contentType) {
+              case 'commit':
+                vscode.commands.executeCommand('worklog-ai.generateCommitMessage');
+                break;
+              case 'pr-template':
+                vscode.commands.executeCommand('worklog-ai.fillPRTemplate');
+                break;
+              case 'worklog':
+              default:
+                vscode.commands.executeCommand('worklog-ai.generateWorklog');
+                break;
+            }
             return;
           case 'includeInCommit':
             this.includeInCommitMessage(this._worklog);
@@ -95,8 +111,11 @@ export class WorklogPanel {
     }
   }
 
-  public update(worklog: string) {
+  public update(worklog: string, contentType?: 'worklog' | 'commit' | 'pr-template') {
     this._worklog = worklog;
+    if (contentType) {
+      this._contentType = contentType;
+    }
     this._panel.webview.html = this.getHtmlForWebview(worklog);
   }
 
@@ -535,12 +554,11 @@ ${worklog}
   }
 
   private async includeInCommitMessage(worklog: string) {
-    // Set configuration to include worklog in commit message
-    await vscode.workspace.getConfiguration('worklogGenerator').update('includeWorklogInCommitMessage', true, vscode.ConfigurationTarget.Workspace);
-    
+    await ConfigService.setIncludeWorklogInCommitMessage(true);
+
     // Store the worklog in global state for later use
     vscode.commands.executeCommand('worklog-ai.storeWorklog', worklog);
-    
+
     vscode.window.showInformationMessage('Worklog will be included in your next commit message. Open the Source Control panel to commit.');
   }
 }

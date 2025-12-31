@@ -77,6 +77,7 @@ The extension leverages advanced AI models (Google Gemini or OpenAI) to understa
 
 - **Rahul Sharma** - Software Developer: [https://github.com/rahul-0210/](https://github.com/rahul-0210/)
 - **Devendra Parihar** - AI Developer: [https://github.com/Devparihar5](https://github.com/Devparihar5)
+- **Rishi Parmar** - Software Architect: [https://github.com/Rishparadox](https://github.com/Rishparadox)
 
 ## Contributing
 

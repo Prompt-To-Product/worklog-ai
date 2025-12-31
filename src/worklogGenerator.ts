@@ -1,47 +1,30 @@
-import * as vscode from "vscode";
 import axios from "axios";
 import { getSelectedModel } from "./modelService";
+import ConfigService from "./configService";
 
-/**
- * Generate a commit message and description based on code changes
- */
 export async function generateCommitMessage(
   changes: string,
   llmProvider: string
 ): Promise<{ message: string; description: string }> {
   try {
-    // Get API keys and settings from configuration
-    const geminiApiKey = vscode.workspace
-      .getConfiguration("worklogGenerator")
-      .get("geminiApiKey", "");
-    const openaiApiKey = vscode.workspace
-      .getConfiguration("worklogGenerator")
-      .get("openaiApiKey", "");
-    const localLlmBaseUrl = vscode.workspace
-      .getConfiguration("worklogGenerator")
-      .get("localLlmBaseUrl", "http://localhost:11434/v1");
-    const localLlmModelName = vscode.workspace
-      .getConfiguration("worklogGenerator")
-      .get("localLlmModelName", "phi");
-
-    // Validate API key or settings based on selected provider
+    const geminiApiKey = ConfigService.getGeminiApiKey();
+    const openaiApiKey = ConfigService.getOpenAIApiKey();
+    const localLlmBaseUrl = ConfigService.getLocalLlmBaseUrl();
+    const localLlmModelName = ConfigService.getLocalLlmModelName();
+    
     if (llmProvider === "gemini" && !geminiApiKey) {
       throw new Error("Gemini API key not configured. Please add it in the extension settings.");
     }
-
     if (llmProvider === "openai" && !openaiApiKey) {
       throw new Error("OpenAI API key not configured. Please add it in the extension settings.");
     }
-
     if (llmProvider === "local" && !localLlmBaseUrl) {
       throw new Error("Local LLM Base URL not configured. Please add it in the extension settings.");
     }
 
-    // Create prompt for commit message generation
     const prompt = createCommitMessagePrompt(changes);
-
-    // Call the appropriate LLM API
     let response: string;
+    
     if (llmProvider === "gemini") {
       const selectedModel = getSelectedModel("gemini");
       response = await callGeminiApi(prompt, geminiApiKey, selectedModel);
@@ -52,45 +35,31 @@ export async function generateCommitMessage(
       response = await callLocalLlmApi(prompt, localLlmBaseUrl, localLlmModelName);
     }
 
-    // Parse the response to extract commit message and description
     const lines = response.trim().split('\n');
     let message = '';
     let description = '';
 
-    // Extract the commit message (first line)
     if (lines.length > 0) {
-      // Remove any markdown formatting or prefixes
       message = lines[0].replace(/^(#|\*\*|__) ?/, '').replace(/ ?(:|\*\*|__)$/, '');
-      
-      // If the message starts with "Commit Message:" or similar, remove it
       message = message.replace(/^(Commit Message|Message|Title|Subject): ?/i, '');
       
-      // Validate message length
       if (message.length > 100) {
         message = message.substring(0, 97) + '...';
       }
     }
 
-    // Extract the description (remaining lines)
     if (lines.length > 1) {
-      // Skip any empty lines after the first line
       let startIndex = 1;
       while (startIndex < lines.length && lines[startIndex].trim() === '') {
         startIndex++;
       }
       
-      // Collect the description lines
       const descriptionLines = [];
       for (let i = startIndex; i < lines.length; i++) {
-        // Skip lines that are headers or separators
         if (lines[i].startsWith('# ') || lines[i].match(/^[-=]{3,}$/)) {
           continue;
         }
-        
-        // Remove bullet points and other markdown formatting
         let line = lines[i].replace(/^[-*+] /, '');
-        
-        // Add the line to the description
         descriptionLines.push(line);
       }
       
@@ -109,46 +78,28 @@ export async function generateCommitMessage(
   }
 }
 
-/**
- * Generate a worklog based on code changes using the specified LLM provider and style
- */
 export async function generateWorklog(
   changes: string,
   llmProvider: string,
   worklogStyle: string
 ): Promise<string> {
   try {
-    // Get API keys and settings from configuration
-    const geminiApiKey = vscode.workspace
-      .getConfiguration("worklogGenerator")
-      .get("geminiApiKey", "");
-    const openaiApiKey = vscode.workspace
-      .getConfiguration("worklogGenerator")
-      .get("openaiApiKey", "");
-    const localLlmBaseUrl = vscode.workspace
-      .getConfiguration("worklogGenerator")
-      .get("localLlmBaseUrl", "http://localhost:11434/v1");
-    const localLlmModelName = vscode.workspace
-      .getConfiguration("worklogGenerator")
-      .get("localLlmModelName", "phi");
+    const geminiApiKey = ConfigService.getGeminiApiKey();
+    const openaiApiKey = ConfigService.getOpenAIApiKey();
+    const localLlmBaseUrl = ConfigService.getLocalLlmBaseUrl();
+    const localLlmModelName = ConfigService.getLocalLlmModelName();
 
-    // Validate API key or settings based on selected provider
     if (llmProvider === "gemini" && !geminiApiKey) {
       throw new Error("Gemini API key not configured. Please add it in the extension settings.");
     }
-
     if (llmProvider === "openai" && !openaiApiKey) {
       throw new Error("OpenAI API key not configured. Please add it in the extension settings.");
     }
-
     if (llmProvider === "local" && !localLlmBaseUrl) {
       throw new Error("Local LLM Base URL not configured. Please add it in the extension settings.");
     }
 
-    // Create prompt based on the selected style
     const prompt = createWorklogPrompt(changes, worklogStyle);
-
-    // Call the appropriate LLM API
     if (llmProvider === "gemini") {
       const selectedModel = getSelectedModel("gemini");
       return await callGeminiApi(prompt, geminiApiKey, selectedModel);
@@ -166,11 +117,7 @@ export async function generateWorklog(
   }
 }
 
-/**
- * Create a prompt for commit message generation
- */
 function createCommitMessagePrompt(changes: string): string {
-  // Limit changes to avoid exceeding token limits
   const limitedChanges =
     changes.length > 10000 ? changes.substring(0, 10000) + "...[truncated]" : changes;
 
@@ -208,11 +155,7 @@ Generate a commit message and description now:
 `;
 }
 
-/**
- * Create a prompt for worklog generation based on the selected style
- */
 function createWorklogPrompt(changes: string, worklogStyle: string): string {
-  // Limit changes to avoid exceeding token limits
   const limitedChanges =
     changes.length > 10000 ? changes.substring(0, 10000) + "...[truncated]" : changes;
 
@@ -307,10 +250,7 @@ Generate the worklog and DSU script now:
 `;
 }
 
-/**
- * Call the Gemini API to generate a worklog
- */
-async function callGeminiApi(prompt: string, apiKey: string, model: string = "gemini-2.0-flash"): Promise<string> {
+async function callGeminiApi(prompt: string, apiKey: string, model: string): Promise<string> {
   try {
     const response = await axios.post(
       `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
@@ -326,7 +266,7 @@ async function callGeminiApi(prompt: string, apiKey: string, model: string = "ge
         ],
         generationConfig: {
           temperature: 0.2,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 2048,
         },
       },
       {
@@ -337,14 +277,40 @@ async function callGeminiApi(prompt: string, apiKey: string, model: string = "ge
       }
     );
 
-    // Extract the generated text from the response
-    const generatedText = response.data.candidates[0].content.parts[0].text;
-    return generatedText;
+    const candidate = response.data.candidates[0];
+
+    // Check if the response was cut off
+    if (candidate.finishReason && candidate.finishReason !== 'STOP') {
+      console.warn(`Gemini API response incomplete. Finish reason: ${candidate.finishReason}`);
+      if (candidate.finishReason === 'MAX_TOKENS') {
+        console.warn('Response was truncated due to token limit. Consider making the prompt more concise.');
+      }
+    }
+
+    return candidate.content.parts[0].text;
   } catch (error) {
     console.error("Error calling Gemini API:", error);
     if (axios.isAxiosError(error) && error.response) {
+      const status = error.response.status;
+      const errorData = error.response.data;
+
+      // Handle specific error cases
+      if (status === 429) {
+        throw new Error(
+          `Model "${model}" is not available for your API key. Please click on the Model selector to choose an available model.`
+        );
+      } else if (status === 404) {
+        throw new Error(
+          `Model "${model}" not found. Please select a valid Gemini model from the model selector.`
+        );
+      } else if (status === 400) {
+        throw new Error(
+          `Invalid request to Gemini API. The model "${model}" may not support the required features. Please select a different model.`
+        );
+      }
+
       throw new Error(
-        `Gemini API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`
+        `Gemini API error: ${status} - ${JSON.stringify(errorData)}`
       );
     }
     throw new Error(
@@ -353,10 +319,7 @@ async function callGeminiApi(prompt: string, apiKey: string, model: string = "ge
   }
 }
 
-/**
- * Call the OpenAI API to generate a worklog
- */
-async function callOpenAiApi(prompt: string, apiKey: string, model: string = "gpt-4o"): Promise<string> {
+async function callOpenAiApi(prompt: string, apiKey: string, model: string): Promise<string> {
   try {
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
@@ -373,7 +336,7 @@ async function callOpenAiApi(prompt: string, apiKey: string, model: string = "gp
           },
         ],
         temperature: 0.2,
-        max_tokens: 1024,
+        max_tokens: 2048,
       },
       {
         headers: {
@@ -383,14 +346,40 @@ async function callOpenAiApi(prompt: string, apiKey: string, model: string = "gp
       }
     );
 
-    // Extract the generated text from the response
-    const generatedText = response.data.choices[0].message.content;
-    return generatedText;
+    const choice = response.data.choices[0];
+
+    // Check if the response was cut off
+    if (choice.finish_reason && choice.finish_reason !== 'stop') {
+      console.warn(`OpenAI API response incomplete. Finish reason: ${choice.finish_reason}`);
+      if (choice.finish_reason === 'length') {
+        console.warn('Response was truncated due to token limit. Consider making the prompt more concise.');
+      }
+    }
+
+    return choice.message.content;
   } catch (error) {
     console.error("Error calling OpenAI API:", error);
     if (axios.isAxiosError(error) && error.response) {
+      const status = error.response.status;
+      const errorData = error.response.data;
+
+      // Handle specific error cases
+      if (status === 429) {
+        throw new Error(
+          `Rate limit exceeded or model "${model}" is not available for your API key. Try using "gpt-4o" or "gpt-3.5-turbo" instead. Click on the Model selector to choose a different model.`
+        );
+      } else if (status === 404) {
+        throw new Error(
+          `Model "${model}" not found. Please select a valid OpenAI model from the model selector.`
+        );
+      } else if (status === 401) {
+        throw new Error(
+          `Invalid OpenAI API key. Please check your API key configuration.`
+        );
+      }
+
       throw new Error(
-        `OpenAI API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`
+        `OpenAI API error: ${status} - ${JSON.stringify(errorData)}`
       );
     }
     throw new Error(
@@ -399,15 +388,10 @@ async function callOpenAiApi(prompt: string, apiKey: string, model: string = "gp
   }
 }
 
-/**
- * Call the Local LLM API to generate a worklog
- */
 async function callLocalLlmApi(prompt: string, baseUrl: string, modelName: string): Promise<string> {
   try {
-    const chatCompletionsUrl = `${baseUrl}/chat/completions`;
-    
     const response = await axios.post(
-      chatCompletionsUrl,
+      `${baseUrl}/chat/completions`,
       {
         model: modelName,
         messages: [
@@ -421,7 +405,7 @@ async function callLocalLlmApi(prompt: string, baseUrl: string, modelName: strin
           },
         ],
         temperature: 0.2,
-        max_tokens: 1024,
+        max_tokens: 2048,
       },
       {
         headers: {
@@ -430,9 +414,17 @@ async function callLocalLlmApi(prompt: string, baseUrl: string, modelName: strin
       }
     );
 
-    // Extract the generated text from the response
-    const generatedText = response.data.choices[0].message.content;
-    return generatedText;
+    const choice = response.data.choices[0];
+
+    // Check if the response was cut off
+    if (choice.finish_reason && choice.finish_reason !== 'stop') {
+      console.warn(`Local LLM API response incomplete. Finish reason: ${choice.finish_reason}`);
+      if (choice.finish_reason === 'length') {
+        console.warn('Response was truncated due to token limit. Consider making the prompt more concise.');
+      }
+    }
+
+    return choice.message.content;
   } catch (error) {
     console.error("Error calling Local LLM API:", error);
     if (axios.isAxiosError(error) && error.response) {
