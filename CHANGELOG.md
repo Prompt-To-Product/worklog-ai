@@ -5,6 +5,36 @@ All notable changes to the "Worklog AI" extension will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2025-12-31
+
+### Added
+- New `ConfigService` class for centralized configuration management across the extension
+- Support for different content types (worklog, commit, PR template) in worklog panel
+- Functionality to remember last selected PR template for quicker access
+- Manual PR template pasting option when no templates found in `.github/` directory
+- Null/undefined guards for API responses (Gemini candidates, OpenAI/Local LLM choices)
+- API key and model validation before making requests
+- 60-second timeout to all API calls to prevent indefinite hangs
+
+### Changed
+- Replaced direct configuration access with `ConfigService` for better encapsulation
+- Increased max output tokens from 1024 to 2048 for more comprehensive API responses
+- Re-enabled TypeScript strict mode for better type safety
+- Removed redundant inline comments for cleaner, more maintainable codebase
+
+### Fixed
+- Enhanced error handling in Gemini and OpenAI API calls with clearer messages for:
+  - Rate limits (HTTP 429)
+  - Invalid models (HTTP 404)
+  - Invalid requests (HTTP 400)
+- Fixed worklog panel command execution to respect content type
+- Added local provider support to `ConfigService.setSelectedModel` method
+
+### Technical
+- Removed unused `changes` parameter from `fillPRTemplate` function signature
+- Updated TypeScript configuration for Node.js environment (removed DOM library)
+- Improved module resolution and compatibility settings
+
 ## [0.3.2] - 2025-12-30
 
 ### Fixed

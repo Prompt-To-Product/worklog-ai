@@ -5,6 +5,7 @@ import { getGitChanges, getSelectedCommit } from "./gitUtils";
 import { WorklogTreeDataProvider } from "./worklogTreeView";
 import { WorklogPanel } from "./worklogPanel";
 import { registerGitIntegration } from "./gitIntegration";
+import ConfigService from "./configService";
 
 export function activate(context: vscode.ExtensionContext) {
   console.log("Worklog AI extension is now active");
@@ -21,18 +22,30 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("worklog-ai.generateWorklog", async () => {
       try {
         // Get LLM provider choice
-        const defaultLlmProvider = vscode.workspace
-          .getConfiguration("worklogGenerator")
-          .get("defaultLlmProvider", "gemini");
+        const defaultLlmProvider = ConfigService.getDefaultLlmProvider();
+        const geminiModel = ConfigService.getSelectedGeminiModel();
+        const openaiModel = ConfigService.getSelectedOpenAIModel();
+        const localModel = ConfigService.getLocalLlmModelName();
+        const geminiApiKey = ConfigService.getGeminiApiKey();
+        const openaiApiKey = ConfigService.getOpenAIApiKey();
+
         const llmProvider = await vscode.window.showQuickPick(
           [
             {
               label: "Google Gemini (Default)",
               value: "gemini",
-              description: "Uses gemini-2.0-flash model",
+              description: geminiApiKey ? `Uses ${geminiModel}` : "Requires API key",
             },
-            { label: "OpenAI", value: "openai", description: "Uses gpt-4o model" },
-            { label: "Local LLM", value: "local", description: "Uses your locally hosted LLM" },
+            {
+              label: "OpenAI",
+              value: "openai",
+              description: openaiApiKey ? `Uses ${openaiModel}` : "Requires API key"
+            },
+            {
+              label: "Local LLM",
+              value: "local",
+              description: `Uses ${localModel}`
+            },
           ],
           {
             placeHolder: "Select AI Provider",
@@ -46,10 +59,6 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Check if API key is configured for the selected provider
         if (llmProvider.value === "gemini") {
-          const geminiApiKey = vscode.workspace
-            .getConfiguration("worklogGenerator")
-            .get("geminiApiKey", "");
-            
           if (!geminiApiKey) {
             const apiKey = await vscode.window.showInputBox({
               prompt: "Enter your Google Gemini API key",
@@ -73,10 +82,6 @@ export function activate(context: vscode.ExtensionContext) {
               .update("geminiApiKey", apiKey, vscode.ConfigurationTarget.Global);
           }
         } else if (llmProvider.value === "openai") {
-          const openaiApiKey = vscode.workspace
-            .getConfiguration("worklogGenerator")
-            .get("openaiApiKey", "");
-            
           if (!openaiApiKey) {
             const apiKey = await vscode.window.showInputBox({
               prompt: "Enter your OpenAI API key",
@@ -100,10 +105,7 @@ export function activate(context: vscode.ExtensionContext) {
               .update("openaiApiKey", apiKey, vscode.ConfigurationTarget.Global);
           }
         } else if (llmProvider.value === "local") {
-          const localLlmBaseUrl = vscode.workspace
-            .getConfiguration("worklogGenerator")
-            .get("localLlmBaseUrl", "");
-            
+          const localLlmBaseUrl = ConfigService.getLocalLlmBaseUrl();
           if (!localLlmBaseUrl) {
             const baseUrl = await vscode.window.showInputBox({
               prompt: "Enter the base URL for your local LLM API",
@@ -131,10 +133,7 @@ export function activate(context: vscode.ExtensionContext) {
               .update("localLlmBaseUrl", baseUrl, vscode.ConfigurationTarget.Global);
           }
           
-          const localLlmModelName = vscode.workspace
-            .getConfiguration("worklogGenerator")
-            .get("localLlmModelName", "");
-            
+          const localLlmModelName = ConfigService.getLocalLlmModelName();
           if (!localLlmModelName) {
             const modelName = await vscode.window.showInputBox({
               prompt: "Enter the model name for your local LLM",
@@ -159,9 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         // Get worklog style choice
-        const defaultWorklogStyle = vscode.workspace
-          .getConfiguration("worklogGenerator")
-          .get("defaultWorklogStyle", "business");
+        const defaultWorklogStyle = ConfigService.getDefaultWorklogStyle();
         const worklogStyle = await vscode.window.showQuickPick(
           [
             {
@@ -341,9 +338,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "worklog-ai.configureLocalLlmBaseUrl",
       async (treeView: WorklogTreeDataProvider) => {
-        const currentBaseUrl = vscode.workspace
-          .getConfiguration("worklogGenerator")
-          .get("localLlmBaseUrl", "http://localhost:11434/v1");
+        const currentBaseUrl = ConfigService.getLocalLlmBaseUrl();
           
         const baseUrl = await vscode.window.showInputBox({
           prompt: "Enter the base URL for your local LLM API",
@@ -374,9 +369,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       "worklog-ai.configureLocalLlmModelName",
       async (treeView: WorklogTreeDataProvider) => {
-        const currentModelName = vscode.workspace
-          .getConfiguration("worklogGenerator")
-          .get("localLlmModelName", "phi");
+        const currentModelName = ConfigService.getLocalLlmModelName();
           
         const modelName = await vscode.window.showInputBox({
           prompt: "Enter the model name for your local LLM",
@@ -431,13 +424,41 @@ export function activate(context: vscode.ExtensionContext) {
             return null;
           }
         });
-        
+
         if (apiKey) {
+          // Save the API key first
           await vscode.workspace
             .getConfiguration("worklogGenerator")
             .update("geminiApiKey", apiKey, vscode.ConfigurationTarget.Global);
-          treeView.refresh();
-          vscode.window.showInformationMessage(`✅ Gemini API key updated successfully`);
+
+          // Fetch available models and auto-select the first one
+          await vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: "Validating API key and fetching models...",
+              cancellable: false,
+            },
+            async () => {
+              try {
+                const { fetchGeminiModels, setSelectedModel } = await import("./modelService");
+                const models = await fetchGeminiModels(apiKey);
+
+                if (models.length > 0) {
+                  // Auto-select the first available model
+                  await setSelectedModel("gemini", models[0].id);
+                  treeView.refresh();
+                  vscode.window.showInformationMessage(
+                    `✅ Gemini API key configured! Auto-selected model: ${models[0].name}`
+                  );
+                }
+              } catch (error) {
+                vscode.window.showErrorMessage(
+                  `⚠️ API key saved but failed to fetch models: ${error instanceof Error ? error.message : String(error)}. Please check your API key.`
+                );
+                treeView.refresh();
+              }
+            }
+          );
         }
       }
     ),
@@ -455,13 +476,41 @@ export function activate(context: vscode.ExtensionContext) {
             return null;
           }
         });
-        
+
         if (apiKey) {
+          // Save the API key first
           await vscode.workspace
             .getConfiguration("worklogGenerator")
             .update("openaiApiKey", apiKey, vscode.ConfigurationTarget.Global);
-          treeView.refresh();
-          vscode.window.showInformationMessage(`✅ OpenAI API key updated successfully`);
+
+          // Fetch available models and auto-select the first one
+          await vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: "Validating API key and fetching models...",
+              cancellable: false,
+            },
+            async () => {
+              try {
+                const { fetchOpenAIModels, setSelectedModel } = await import("./modelService");
+                const models = await fetchOpenAIModels(apiKey);
+
+                if (models.length > 0) {
+                  // Auto-select the first available model
+                  await setSelectedModel("openai", models[0].id);
+                  treeView.refresh();
+                  vscode.window.showInformationMessage(
+                    `✅ OpenAI API key configured! Auto-selected model: ${models[0].name}`
+                  );
+                }
+              } catch (error) {
+                vscode.window.showErrorMessage(
+                  `⚠️ API key saved but failed to fetch models: ${error instanceof Error ? error.message : String(error)}. Please check your API key.`
+                );
+                treeView.refresh();
+              }
+            }
+          );
         }
       }
     ),
@@ -469,67 +518,129 @@ export function activate(context: vscode.ExtensionContext) {
       "worklog-ai.selectGeminiModel",
       async (treeView: WorklogTreeDataProvider) => {
         try {
-          const { fetchGeminiModels, setSelectedModel } = await import("./modelService");
-          const config = vscode.workspace.getConfiguration("worklogGenerator");
-          const apiKey = config.get("geminiApiKey", "");
-          
+          const { fetchGeminiModels, setSelectedModel, getCachedModels } = await import("./modelService");
+          const ConfigService = (await import("./configService")).default;
+          const apiKey = ConfigService.getGeminiApiKey();
+
           if (!apiKey) {
             vscode.window.showErrorMessage("Please configure Gemini API key first");
             return;
           }
 
-          const models = await fetchGeminiModels(apiKey);
-          const items = models.map(model => ({
+          // Check if models are already cached
+          const cachedModels = getCachedModels("gemini", apiKey);
+          let models: Awaited<ReturnType<typeof fetchGeminiModels>>;
+
+          if (cachedModels) {
+            // Use cached models, no progress indicator needed
+            models = cachedModels;
+          } else {
+            // Fetch models with progress indicator
+            models = await vscode.window.withProgress(
+              {
+                location: vscode.ProgressLocation.Notification,
+                title: "Fetching available Gemini models...",
+                cancellable: false,
+              },
+              async () => {
+                return await fetchGeminiModels(apiKey);
+              }
+            );
+          }
+
+          const currentModel = ConfigService.getSelectedGeminiModel();
+
+          if (models.length === 0) {
+            vscode.window.showWarningMessage("No compatible models found for your API key");
+            return;
+          }
+
+          const items = models.map((model) => ({
             label: model.name,
-            description: model.id,
-            value: model.id
+            description: model.id === currentModel ? `${model.id} ⭐ Current` : model.id,
+            value: model.id,
+            picked: model.id === currentModel
           }));
 
           const selected = await vscode.window.showQuickPick(items, {
-            placeHolder: "Select Gemini model"
+            placeHolder: "Select Gemini model",
+            title: `${models.length} available Gemini models`
           });
 
           if (selected) {
             await setSelectedModel("gemini", selected.value);
             treeView.refresh();
-            vscode.window.showInformationMessage(`✅ Selected Gemini model: ${selected.label}`);
+            vscode.window.showInformationMessage(`✅ Selected: ${selected.label}`);
           }
         } catch (error) {
-          vscode.window.showErrorMessage(`Failed to fetch Gemini models: ${error}`);
+          vscode.window.showErrorMessage(
+            `Failed to fetch models: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
       }
     ),
     vscode.commands.registerCommand(
-      "worklog-ai.selectOpenAIModel", 
+      "worklog-ai.selectOpenAIModel",
       async (treeView: WorklogTreeDataProvider) => {
         try {
-          const { fetchOpenAIModels, setSelectedModel } = await import("./modelService");
-          const config = vscode.workspace.getConfiguration("worklogGenerator");
-          const apiKey = config.get("openaiApiKey", "");
-          
+          const { fetchOpenAIModels, setSelectedModel, getCachedModels } = await import("./modelService");
+          const ConfigService = (await import("./configService")).default;
+          const apiKey = ConfigService.getOpenAIApiKey();
+
           if (!apiKey) {
             vscode.window.showErrorMessage("Please configure OpenAI API key first");
             return;
           }
 
-          const models = await fetchOpenAIModels(apiKey);
-          const items = models.map(model => ({
+          // Check if models are already cached
+          const cachedModels = getCachedModels("openai", apiKey);
+          let models: Awaited<ReturnType<typeof fetchOpenAIModels>>;
+
+          if (cachedModels) {
+            // Use cached models, no progress indicator needed
+            models = cachedModels;
+          } else {
+            // Fetch models with progress indicator
+            models = await vscode.window.withProgress(
+              {
+                location: vscode.ProgressLocation.Notification,
+                title: "Fetching available OpenAI models...",
+                cancellable: false,
+              },
+              async () => {
+                return await fetchOpenAIModels(apiKey);
+              }
+            );
+          }
+
+          const currentModel = ConfigService.getSelectedOpenAIModel();
+
+          if (models.length === 0) {
+            vscode.window.showWarningMessage("No compatible models found for your API key");
+            return;
+          }
+
+          const items = models.map((model) => ({
             label: model.name,
-            description: model.id,
-            value: model.id
+            description: model.id === currentModel ? `${model.id} ⭐ Current` : model.id,
+            value: model.id,
+            picked: model.id === currentModel
           }));
 
           const selected = await vscode.window.showQuickPick(items, {
-            placeHolder: "Select OpenAI model"
+            placeHolder: "Select OpenAI model",
+            title: `${models.length} available OpenAI models`
           });
 
           if (selected) {
             await setSelectedModel("openai", selected.value);
             treeView.refresh();
-            vscode.window.showInformationMessage(`✅ Selected OpenAI model: ${selected.label}`);
+            vscode.window.showInformationMessage(`✅ Selected: ${selected.label}`);
           }
         } catch (error) {
-          vscode.window.showErrorMessage(`Failed to fetch OpenAI models: ${error}`);
+          vscode.window.showErrorMessage(
+            `Failed to fetch models: ${error instanceof Error ? error.message : String(error)}`
+          );
         }
       }
     )
