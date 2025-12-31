@@ -6,7 +6,7 @@
 
 Generate professional worklogs instantly from your code changes using AI.
 
-## What's New in v0.3.3
+## What's New in v0.3.4
 
 - **Bug Fixes**: Enhanced stability and reliability across all features
 - **Code Quality**: Removed redundant comments for cleaner, more maintainable code
