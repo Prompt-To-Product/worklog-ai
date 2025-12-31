@@ -277,9 +277,12 @@ async function callGeminiApi(prompt: string, apiKey: string, model: string): Pro
       }
     );
 
-    const candidate = response.data.candidates[0];
+    const candidates = response.data.candidates;
+    if (!candidates || candidates.length === 0) {
+      throw new Error('Gemini API returned no candidates. The response may have been blocked or filtered.');
+    }
+    const candidate = candidates[0];
 
-    // Check if the response was cut off
     if (candidate.finishReason && candidate.finishReason !== 'STOP') {
       console.warn(`Gemini API response incomplete. Finish reason: ${candidate.finishReason}`);
       if (candidate.finishReason === 'MAX_TOKENS') {
@@ -294,10 +297,9 @@ async function callGeminiApi(prompt: string, apiKey: string, model: string): Pro
       const status = error.response.status;
       const errorData = error.response.data;
 
-      // Handle specific error cases
       if (status === 429) {
         throw new Error(
-          `Model "${model}" is not available for your API key. Please click on the Model selector to choose an available model.`
+          `Rate limit exceeded for model "${model}". Please wait and try again, or select a different model from the model selector.`
         );
       } else if (status === 404) {
         throw new Error(
@@ -346,9 +348,12 @@ async function callOpenAiApi(prompt: string, apiKey: string, model: string): Pro
       }
     );
 
-    const choice = response.data.choices[0];
+    const choices = response.data.choices;
+    if (!choices || choices.length === 0) {
+      throw new Error('OpenAI API returned no choices. The response may have been filtered or incomplete.');
+    }
+    const choice = choices[0];
 
-    // Check if the response was cut off
     if (choice.finish_reason && choice.finish_reason !== 'stop') {
       console.warn(`OpenAI API response incomplete. Finish reason: ${choice.finish_reason}`);
       if (choice.finish_reason === 'length') {
@@ -414,9 +419,12 @@ async function callLocalLlmApi(prompt: string, baseUrl: string, modelName: strin
       }
     );
 
-    const choice = response.data.choices[0];
+    const choices = response.data.choices;
+    if (!choices || choices.length === 0) {
+      throw new Error('Local LLM API returned no choices. Check your local LLM configuration.');
+    }
+    const choice = choices[0];
 
-    // Check if the response was cut off
     if (choice.finish_reason && choice.finish_reason !== 'stop') {
       console.warn(`Local LLM API response incomplete. Finish reason: ${choice.finish_reason}`);
       if (choice.finish_reason === 'length') {

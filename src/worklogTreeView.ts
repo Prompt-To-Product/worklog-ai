@@ -1143,7 +1143,7 @@ ${result.description}
                 .update("lastSelectedPRTemplate", selectedTemplate.path, vscode.ConfigurationTarget.Global);
             }
 
-            const filledTemplate = await fillPRTemplate(selectedTemplate, changes, worklogContent);
+            const filledTemplate = await fillPRTemplate(selectedTemplate, worklogContent);
 
             progress.report({ increment: 100, message: "Complete!" });
 

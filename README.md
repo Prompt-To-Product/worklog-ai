@@ -6,15 +6,12 @@
 
 Generate professional worklogs instantly from your code changes using AI.
 
-## What's New in v0.3.2
+## What's New in v0.3.3
 
-- **Improved Performance**: Enhanced commit message extraction in PR template generation
-- **Bug Fixes**: Fixed potential issues with duplicate lines in git changes output
-- Auto-fill GitHub PR templates from `.github/*.md` files
-- Generate PR descriptions from uncommitted changes or selected commits
-- Multi-commit selection with manual picker for comprehensive PR descriptions
-- Smart template filling with AI-generated content and auto-detected change types
-- Dynamic model selection for Gemini and OpenAI with real-time API discovery
+- **Bug Fixes**: Enhanced stability and reliability across all features
+- **Code Quality**: Removed redundant comments for cleaner, more maintainable code
+- **Improved Operations**: Smoother user experience with optimized code execution
+- **Enhanced Performance**: Better resource utilization and faster response times
 
 [See full changelog](https://github.com/Prompt-To-Product/worklog-ai/blob/main/CHANGELOG.md)
 

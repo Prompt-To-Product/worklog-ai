@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 import axios from "axios";
-import { getGitChanges } from "./gitUtils";
 import ConfigService from "./configService";
 import { getSelectedModel } from "./modelService";
 
@@ -203,7 +202,14 @@ function cleanupTemplate(template: string): string {
 
 async function callGeminiForTemplate(prompt: string): Promise<string> {
   const apiKey = ConfigService.getGeminiApiKey();
+  if (!apiKey) {
+    throw new Error("Gemini API key is not configured");
+  }
+
   const selectedModel = getSelectedModel("gemini");
+  if (!selectedModel) {
+    throw new Error("No Gemini model selected");
+  }
 
   const response = await axios.post(
     `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent`,
@@ -219,6 +225,7 @@ async function callGeminiForTemplate(prompt: string): Promise<string> {
         "Content-Type": "application/json",
         "x-goog-api-key": apiKey,
       },
+      timeout: 60000,
     }
   );
 
@@ -237,7 +244,14 @@ async function callGeminiForTemplate(prompt: string): Promise<string> {
 
 async function callOpenAIForTemplate(prompt: string): Promise<string> {
   const apiKey = ConfigService.getOpenAIApiKey();
+  if (!apiKey) {
+    throw new Error("OpenAI API key is not configured");
+  }
+
   const selectedModel = getSelectedModel("openai");
+  if (!selectedModel) {
+    throw new Error("No OpenAI model selected");
+  }
 
   const response = await axios.post(
     "https://api.openai.com/v1/chat/completions",
@@ -261,6 +275,7 @@ async function callOpenAIForTemplate(prompt: string): Promise<string> {
         "Content-Type": "application/json",
         Authorization: `Bearer ${apiKey}`,
       },
+      timeout: 60000,
     }
   );
 
@@ -302,6 +317,7 @@ async function callLocalLLMForTemplate(prompt: string): Promise<string> {
       headers: {
         "Content-Type": "application/json",
       },
+      timeout: 60000,
     }
   );
 
@@ -320,7 +336,6 @@ async function callLocalLLMForTemplate(prompt: string): Promise<string> {
 
 export async function fillPRTemplate(
   template: PRTemplateInfo,
-  changes: string,
   worklogContent: string
 ): Promise<string> {
   return await fillTemplateWithAI(template.content, worklogContent, null);

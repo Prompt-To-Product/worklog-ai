@@ -109,6 +109,13 @@ class ConfigService {
       case "openai":
         await this.setSelectedOpenAIModel(modelId);
         break;
+      case "local":
+        await this.getConfig().update(
+          "localLlmModelName",
+          modelId,
+          vscode.ConfigurationTarget.Global
+        );
+        break;
     }
   }
 
