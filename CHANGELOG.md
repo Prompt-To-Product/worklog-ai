@@ -5,6 +5,19 @@ All notable changes to the "Worklog AI" extension will be documented in this fil
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.4] - 2025-12-31
+
+### Added
+- Added notebook template icon to worklog generator view for better visual identification
+
+### Changed
+- Simplified extension activation events to empty array for improved startup performance
+- Optimized extension loading by removing specific view activation triggers
+
+### Technical
+- Removed `onView:worklogGeneratorView` from activation events for faster extension initialization
+- Added `$(notebook-template)` icon to worklog generator view configuration
+
 ## [0.3.3] - 2025-12-31
 
 ### Added
