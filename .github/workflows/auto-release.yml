@@ -53,7 +53,7 @@ jobs:
       - name: Create Release
         uses: release-drafter/release-drafter@v5
         with:
-          publish: true
+          publish: false
           version: ${{ needs.check_version_change.outputs.new_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
