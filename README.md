@@ -6,15 +6,6 @@
 
 Generate professional worklogs instantly from your code changes using AI.
 
-## What's New in v0.3.4
-
-- **Bug Fixes**: Enhanced stability and reliability across all features
-- **Code Quality**: Removed redundant comments for cleaner, more maintainable code
-- **Improved Operations**: Smoother user experience with optimized code execution
-- **Enhanced Performance**: Better resource utilization and faster response times
-
-[See full changelog](https://github.com/Prompt-To-Product/worklog-ai/blob/main/CHANGELOG.md)
-
 ## Demo
 
 Watch our demo video to see Worklog AI in action:
@@ -79,6 +70,10 @@ The extension leverages advanced AI models (Google Gemini or OpenAI) to understa
 ## Contributing
 
 For developers interested in contributing or testing this extension locally, please see our [Development Guide](DEVELOPMENT.md).
+
+## Changelog
+[See full changelog](https://github.com/Prompt-To-Product/worklog-ai/blob/main/CHANGELOG.md)
+
 
 ## License
 
