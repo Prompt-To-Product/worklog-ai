@@ -25,20 +25,30 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
   private userCommits: any[] = [];
 
   constructor(private context: vscode.ExtensionContext) {
-    this.llmProvider = ConfigService.getDefaultLlmProvider();
-    this.worklogStyle = ConfigService.getDefaultWorklogStyle();
+    try {
+      this.llmProvider = ConfigService.getDefaultLlmProvider();
+      this.worklogStyle = ConfigService.getDefaultWorklogStyle();
 
-    // Initialize with current branch
-    this.initializeBranch();
+      // Initialize with current branch
+      this.initializeBranch().catch(error => {
+        console.error("Failed to initialize branch:", error);
+        // Continue with default state if initialization fails
+      });
 
-    // Listen for configuration changes
-    vscode.workspace.onDidChangeConfiguration((e) => {
-      if (ConfigService.affectsConfiguration(e)) {
-        this.llmProvider = ConfigService.getDefaultLlmProvider();
-        this.worklogStyle = ConfigService.getDefaultWorklogStyle();
-        this.refresh();
-      }
-    });
+      // Listen for configuration changes
+      vscode.workspace.onDidChangeConfiguration((e) => {
+        if (ConfigService.affectsConfiguration(e)) {
+          this.llmProvider = ConfigService.getDefaultLlmProvider();
+          this.worklogStyle = ConfigService.getDefaultWorklogStyle();
+          this.refresh();
+        }
+      });
+    } catch (error) {
+      console.error("TreeDataProvider constructor error:", error);
+      // Set safe defaults
+      this.llmProvider = "gemini";
+      this.worklogStyle = "business";
+    }
   }
 
   private async initializeBranch() {
@@ -136,13 +146,25 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
     return items;
     } catch (error) {
       console.error("Error in getChildren:", error);
-      return [new WorklogItem(
-        "❌ Error loading view",
-        vscode.TreeItemCollapsibleState.None,
-        undefined,
-        "error",
-        "Click to refresh"
-      )];
+      // Return a minimal fallback structure that always works
+      return [
+        new WorklogItem(
+          "❌ Error loading view",
+          vscode.TreeItemCollapsibleState.None,
+          {
+            command: "worklog-ai.refreshView",
+            title: "Refresh View"
+          },
+          "error",
+          "Click to refresh"
+        ),
+        new WorklogItem(
+          "⚙️ Settings",
+          vscode.TreeItemCollapsibleState.Collapsed,
+          undefined,
+          "settingsSection"
+        )
+      ];
     }
   }
 

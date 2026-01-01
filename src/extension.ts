@@ -10,23 +10,45 @@ import ConfigService from "./configService";
 export function activate(context: vscode.ExtensionContext) {
   console.log("Worklog AI extension is now active");
 
-  // Register the TreeView
-  const worklogTreeDataProvider = new WorklogTreeDataProvider(context);
-  const treeViewDisposable = vscode.window.registerTreeDataProvider("worklogGeneratorView", worklogTreeDataProvider);
-  context.subscriptions.push(treeViewDisposable);
+  // Register the TreeView with enhanced error handling
+  let worklogTreeDataProvider: WorklogTreeDataProvider;
+  
+  try {
+    worklogTreeDataProvider = new WorklogTreeDataProvider(context);
+    
+    // Create the tree view explicitly
+    const treeView = vscode.window.createTreeView("worklogGeneratorView", {
+      treeDataProvider: worklogTreeDataProvider,
+      showCollapseAll: true
+    });
+    
+    context.subscriptions.push(treeView);
+    
+    // Ensure the tree view is properly initialized
+    setTimeout(() => {
+      worklogTreeDataProvider.refresh();
+    }, 100);
 
-  // Test TreeDataProvider immediately after registration
-  setTimeout(async () => {
+    console.log("TreeDataProvider registered successfully");
+  } catch (error) {
+    console.error("Failed to register TreeDataProvider:", error);
+    vscode.window.showErrorMessage("Failed to initialize Worklog AI view. Please reload VS Code.");
+    
+    // Create and register a fallback provider
+    worklogTreeDataProvider = new WorklogTreeDataProvider(context);
+    
+    // Attempt to register the fallback provider
     try {
-      const rootItems = await worklogTreeDataProvider.getChildren();
-      console.log("TreeDataProvider test - Root items:", rootItems.length);
-      if (rootItems.length === 0) {
-        console.warn("TreeDataProvider returned no items - this might cause the 'no data provider' error");
-      }
-    } catch (error) {
-      console.error("TreeDataProvider test failed:", error);
+      const fallbackTreeView = vscode.window.createTreeView("worklogGeneratorView", {
+        treeDataProvider: worklogTreeDataProvider,
+        showCollapseAll: true
+      });
+      context.subscriptions.push(fallbackTreeView);
+      console.log("Fallback TreeDataProvider registered successfully");
+    } catch (fallbackError) {
+      console.error("Fallback TreeView registration also failed:", fallbackError);
     }
-  }, 1000);
+  }
 
   // Register Git integration
   registerGitIntegration(context);
