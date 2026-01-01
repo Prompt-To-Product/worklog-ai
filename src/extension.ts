@@ -12,7 +12,21 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Register the TreeView
   const worklogTreeDataProvider = new WorklogTreeDataProvider(context);
-  vscode.window.registerTreeDataProvider("worklogGeneratorView", worklogTreeDataProvider);
+  const treeViewDisposable = vscode.window.registerTreeDataProvider("worklogGeneratorView", worklogTreeDataProvider);
+  context.subscriptions.push(treeViewDisposable);
+
+  // Test TreeDataProvider immediately after registration
+  setTimeout(async () => {
+    try {
+      const rootItems = await worklogTreeDataProvider.getChildren();
+      console.log("TreeDataProvider test - Root items:", rootItems.length);
+      if (rootItems.length === 0) {
+        console.warn("TreeDataProvider returned no items - this might cause the 'no data provider' error");
+      }
+    } catch (error) {
+      console.error("TreeDataProvider test failed:", error);
+    }
+  }, 1000);
 
   // Register Git integration
   registerGitIntegration(context);
