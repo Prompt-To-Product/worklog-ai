@@ -34,8 +34,20 @@ export function activate(context: vscode.ExtensionContext) {
     console.error("Failed to register TreeDataProvider:", error);
     vscode.window.showErrorMessage("Failed to initialize Worklog AI view. Please reload VS Code.");
     
-    // Create a fallback provider
+    // Create and register a fallback provider
     worklogTreeDataProvider = new WorklogTreeDataProvider(context);
+    
+    // Attempt to register the fallback provider
+    try {
+      const fallbackTreeView = vscode.window.createTreeView("worklogGeneratorView", {
+        treeDataProvider: worklogTreeDataProvider,
+        showCollapseAll: true
+      });
+      context.subscriptions.push(fallbackTreeView);
+      console.log("Fallback TreeDataProvider registered successfully");
+    } catch (fallbackError) {
+      console.error("Fallback TreeView registration also failed:", fallbackError);
+    }
   }
 
   // Register Git integration
