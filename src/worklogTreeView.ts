@@ -71,24 +71,25 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
   }
 
   async getChildren(element?: WorklogItem): Promise<WorklogItem[]> {
-    if (element) {
-      // Handle expandable sections
-      if (element.contextValue === "settingsSection") {
-        return this.getSettingsChildren();
+    try {
+      if (element) {
+        // Handle expandable sections
+        if (element.contextValue === "settingsSection") {
+          return this.getSettingsChildren();
+        }
+        if (element.contextValue === "branchSection") {
+          return this.getBranchChildren();
+        }
+        if (element.contextValue === "commitsSection") {
+          return this.getCommitsChildren();
+        }
+        if (element.contextValue === "resultSection") {
+          return this.getResultChildren();
+        }
+        return [];
       }
-      if (element.contextValue === "branchSection") {
-        return this.getBranchChildren();
-      }
-      if (element.contextValue === "commitsSection") {
-        return this.getCommitsChildren();
-      }
-      if (element.contextValue === "resultSection") {
-        return this.getResultChildren();
-      }
-      return [];
-    }
 
-    const items: WorklogItem[] = [];
+      const items: WorklogItem[] = [];
 
     // Settings section - expanded by default for easy access
     const settingsSection = new WorklogItem(
@@ -133,6 +134,16 @@ export class WorklogTreeDataProvider implements vscode.TreeDataProvider<WorklogI
     }
 
     return items;
+    } catch (error) {
+      console.error("Error in getChildren:", error);
+      return [new WorklogItem(
+        "❌ Error loading view",
+        vscode.TreeItemCollapsibleState.None,
+        undefined,
+        "error",
+        "Click to refresh"
+      )];
+    }
   }
 
   private getSettingsChildren(): WorklogItem[] {
