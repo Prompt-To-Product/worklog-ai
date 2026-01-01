@@ -32,10 +32,13 @@ jobs:
           echo "Publisher: $(node -p "require('./package.json').publisher")"
       
       - name: Package extension
-        run: vsce package
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          vsce package
+          echo "VSIX_FILE=worklog-ai-${PACKAGE_VERSION}.vsix" >> $GITHUB_ENV
       
       - name: Publish to VS Code Marketplace
-        run: vsce publish -p ${{ secrets.VSCE_TOKEN }}
+        run: vsce publish --packagePath ${{ env.VSIX_FILE }} -p ${{ secrets.VSCE_TOKEN }}
         env:
           VSCE_TOKEN: ${{ secrets.VSCE_TOKEN }}
       
@@ -44,4 +47,4 @@ jobs:
         if: always()
         with:
           name: extension-vsix
-          path: "*.vsix"
+          path: ${{ env.VSIX_FILE }}

@@ -47,65 +47,37 @@
       {
         "command": "worklog-ai.generateWorklogFromCurrentChanges",
         "title": "✨ Create Worklog from Uncommitted Changes",
-        "category": "Worklog AI",
-        "icon": {
-          "light": "$(diff)",
-          "dark": "$(diff)"
-        }
+        "category": "Worklog AI"
       },
       {
         "command": "worklog-ai.generateWorklogFromCommit",
         "title": "📝 Create Worklog from Commit History",
-        "category": "Worklog AI",
-        "icon": {
-          "light": "$(git-commit)",
-          "dark": "$(git-commit)"
-        }
+        "category": "Worklog AI"
       },
       {
         "command": "worklog-ai.generateCommitMessage",
         "title": "📝 Generate Commit Message",
-        "category": "Worklog AI",
-        "icon": {
-          "light": "$(git-commit)",
-          "dark": "$(git-commit)"
-        }
+        "category": "Worklog AI"
       },
       {
         "command": "worklog-ai.exportWorklog",
         "title": "📤 Save Worklog to File",
-        "category": "Worklog AI",
-        "icon": {
-          "light": "$(export)",
-          "dark": "$(export)"
-        }
+        "category": "Worklog AI"
       },
       {
         "command": "worklog-ai.refreshView",
         "title": "🔄 Refresh Worklog Panel",
-        "category": "Worklog AI",
-        "icon": {
-          "light": "$(refresh)",
-          "dark": "$(refresh)"
-        }
+        "category": "Worklog AI"
       },
       {
         "command": "worklog-ai.copyWorklog",
         "title": "📋 Copy Worklog to Clipboard",
-        "category": "Worklog AI",
-        "icon": {
-          "light": "$(copy)",
-          "dark": "$(copy)"
-        }
+        "category": "Worklog AI"
       },
       {
         "command": "worklog-ai.openSettings",
         "title": "⚙️ Configure Worklog Settings",
-        "category": "Worklog AI",
-        "icon": {
-          "light": "$(gear)",
-          "dark": "$(gear)"
-        }
+        "category": "Worklog AI"
       },
       {
         "command": "worklog-ai.selectGeminiModel",
